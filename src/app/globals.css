@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 36 24% 96%;
+  --foreground: 60 2% 17%;
+  --card: 0 0% 100%;
+  --card-foreground: 60 2% 17%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 60 2% 17%;
+  --primary: 209 27% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 160 16% 61%;
+  --secondary-foreground: 60 2% 17%;
+  --muted: 36 8% 86%;
+  --muted-foreground: 30 2% 41%;
+  --accent: 30 20% 63%;
+  --accent-foreground: 60 2% 17%;
+  --destructive: 5 41% 61%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 40 13% 88%;
+  --input: 40 13% 88%;
+  --ring: 209 27% 55%;
+  --radius: 0.5rem;
+  --clinic-primary-dynamic: #6b8cae;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background: #f7f5f2;
+  color: #2c2c2a;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.bg-clinic-primary {
+  background-color: var(--clinic-primary-dynamic);
+}
+
+.text-clinic-primary {
+  color: var(--clinic-primary-dynamic);
+}
+
+.border-clinic-primary {
+  border-color: var(--clinic-primary-dynamic);
+}

@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function isAuth() { return request.auth != null }
+    function uid() { return request.auth.uid }
+    function userData() {
+      return get(/databases/$(db)/documents/users/$(uid())).data
+    }
+    function role() { return userData().role }
+    function clinicId() { return userData().clinicId }
+    function isOwner() { return role() == 'OWNER' }
+    function isAdmin() { return role() in ['OWNER','ADMIN'] }
+    function isStaff() {
+      return role() in ['OWNER','ADMIN','RECEPTIONIST']
+    }
+    function ownClinic(cid) { return clinicId() == cid }
+
+    match /users/{userId} {
+      allow read: if isAuth() && (
+        userId == request.auth.uid ||
+        (isAdmin() && resource.data.clinicId == clinicId())
+      )
+      allow create: if isAuth() && (
+        userId == request.auth.uid ||
+        (isAdmin() && request.resource.data.clinicId == clinicId())
+      )
+      allow update: if isAuth() && (
+        userId == request.auth.uid ||
+        (isAdmin() && resource.data.clinicId == clinicId())
+      )
+      allow delete: if isAuth() && isOwner() && resource.data.clinicId == clinicId()
+    }
+
+    match /clinics/{cid} {
+      allow read: if isAuth() && ownClinic(cid) && isStaff()
+      allow update: if isAuth() && ownClinic(cid) && isAdmin()
+      allow create: if isAuth()
+      allow delete: if isAuth() && ownClinic(cid) && isOwner()
+
+      match /doctors/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isStaff()
+        allow write: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+      match /patients/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isStaff()
+        allow create, update: if isAuth() && ownClinic(cid) && isStaff()
+        allow delete: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+      match /appointments/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isStaff()
+        allow create, update: if isAuth() && ownClinic(cid) && isStaff()
+        allow delete: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+      match /schedules/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isStaff()
+        allow write: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+      match /payments/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isAdmin()
+        allow create, update: if isAuth() && ownClinic(cid) && isStaff()
+        allow delete: if isAuth() && ownClinic(cid) && isOwner()
+      }
+      match /insurances/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isStaff()
+        allow write: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+      match /cashFlow/{id} {
+        allow read, write: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+      match /specialties/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isStaff()
+        allow write: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+      match /employees/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isAdmin()
+        allow write: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+      match /examTypes/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isStaff()
+        allow create, update: if isAuth() && ownClinic(cid) && isStaff()
+        allow delete: if false
+      }
+      match /whatsappLogs/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isAdmin()
+        allow create: if isAuth() && ownClinic(cid) && isStaff()
+      }
+      match /settings/{id} {
+        allow read: if isAuth() && ownClinic(cid) && isStaff()
+        allow write: if isAuth() && ownClinic(cid) && isAdmin()
+      }
+    }
+  }
+}
