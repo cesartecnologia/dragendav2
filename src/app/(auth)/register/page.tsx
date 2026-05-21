@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { bootstrapPostgresClinic } from "../../../lib/auth/sessionClient";
 import { registerWithEmail } from "../../../lib/firebase/auth";
 import { firestoreDb } from "../../../lib/firebase/config";
 import { useAuthStore } from "../../../lib/stores/authStore";
@@ -97,6 +98,16 @@ const RegisterPage = (): JSX.Element => {
         email: values.email,
         active: true,
         createdAt: serverTimestamp(),
+      });
+      await bootstrapPostgresClinic(result.user, {
+        clinicId,
+        ownerName: values.name,
+        ownerEmail: values.email,
+        clinicName: values.clinicName,
+        cnpj: values.cnpj,
+        phone: values.phone,
+        city: values.city,
+        state: values.state,
       });
       setFirebaseUser(result.user);
       setLoading(false);

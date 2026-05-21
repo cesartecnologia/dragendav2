@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { updatePayment } from "../../../../lib/services/financialService";
+import { updatePayment } from "../../../../lib/serverServices/financialService";
 import { paymentUpdateSchema } from "../../../../lib/validations/payment";
+import { verifyFirebaseIdToken } from "../../../../lib/firebase/serverAuth";
+import { getUserByFirebaseUid, type ClientUser } from "../../../../lib/services/authPostgresService";
 
 export type PaymentRouteContext = {
   params: Promise<{
@@ -8,18 +10,22 @@ export type PaymentRouteContext = {
   }>;
 };
 
-const getClinicId = (request: NextRequest): string | null => request.headers.get("x-clinic-id");
-const isAuthenticated = (request: NextRequest): boolean => (request.headers.get("authorization") ?? "").startsWith("Bearer ");
+const authenticate = async (request: NextRequest): Promise<ClientUser | null> => {
+  const authorization = request.headers.get("authorization") ?? "";
 
-export const PATCH = async (request: NextRequest, context: PaymentRouteContext): Promise<NextResponse> => {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!authorization.startsWith("Bearer ")) {
+    return null;
   }
 
-  const clinicId = getClinicId(request);
+  const firebaseUser = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
+  return await getUserByFirebaseUid(firebaseUser.uid);
+};
 
-  if (clinicId === null) {
-    return NextResponse.json({ message: "Clínica não identificada" }, { status: 400 });
+export const PATCH = async (request: NextRequest, context: PaymentRouteContext): Promise<NextResponse> => {
+  const user = await authenticate(request);
+
+  if (user === null || !user.active) {
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const parsed = paymentUpdateSchema.safeParse(await request.json());
@@ -29,6 +35,6 @@ export const PATCH = async (request: NextRequest, context: PaymentRouteContext):
   }
 
   const params = await context.params;
-  await updatePayment(clinicId, params.id, parsed.data);
+  await updatePayment(user.clinicId, params.id, parsed.data);
   return NextResponse.json({ success: true });
 };

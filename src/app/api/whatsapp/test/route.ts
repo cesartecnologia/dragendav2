@@ -1,18 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { testConnection } from "../../../../lib/services/whatsappService";
+import { getSessionUserFromRequest } from "../../../../lib/auth/apiSession";
+import { testConnection } from "../../../../lib/serverServices/whatsappService";
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
-  if (!(request.headers.get("authorization") ?? "").startsWith("Bearer ")) {
+  const user = await getSessionUserFromRequest(request);
+
+  if (user === null || !user.active) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
-  const clinicId = request.headers.get("x-clinic-id");
-
-  if (clinicId === null) {
-    return NextResponse.json({ message: "Clínica não identificada" }, { status: 400 });
-  }
-
-  const result = await testConnection(clinicId);
+  const result = await testConnection(user.clinicId);
   return NextResponse.json(result);
 };
-

@@ -1,5 +1,7 @@
 import type { QueryDocumentSnapshot, Timestamp } from "firebase/firestore";
 
+export type PersistedTimestamp = Timestamp | string;
+
 export const ROLES = {
   OWNER: "OWNER",
   ADMIN: "ADMIN",
@@ -98,7 +100,7 @@ export type Clinic = {
   whatsappApiUrl: string;
   plan: ClinicPlan;
   active: boolean;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -149,7 +151,7 @@ export type Doctor = {
   workDates: WorkDate[];
   periods: ConsultationPeriod[];
   vacations: Vacation[];
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type Patient = {
@@ -165,7 +167,7 @@ export type Patient = {
   healthInsurance: string;
   notes: string;
   active: boolean;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type Appointment = {
@@ -190,7 +192,7 @@ export type Appointment = {
   discountPercent: number;
   amount: number;
   paymentMethod: PaymentMethod | null;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
   createdBy: string;
 };
 
@@ -202,7 +204,7 @@ export type ExamType = {
   amount: number;
   laboratory: string;
   active: boolean;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type Schedule = {
@@ -237,7 +239,7 @@ export type Payment = {
   insuranceCoverage: number;
   patientCopay: number;
   notes: string;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
   createdBy: string;
 };
 
@@ -249,7 +251,7 @@ export type Insurance = {
   discountPercent: number;
   active: boolean;
   coverageRules: InsuranceCoverageRule[];
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type InsuranceCoverageRule = {
@@ -264,7 +266,7 @@ export type Specialty = {
   name: string;
   active: boolean;
   order: number;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type Employee = {
@@ -275,7 +277,7 @@ export type Employee = {
   phone: string;
   role: Role;
   active: boolean;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type CashFlow = {
@@ -288,7 +290,7 @@ export type CashFlow = {
   date: string;
   paymentMethod: string;
   referenceId: string | null;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type User = {
@@ -298,7 +300,7 @@ export type User = {
   name: string;
   email: string;
   active: boolean;
-  createdAt: Timestamp;
+  createdAt: PersistedTimestamp;
 };
 
 export type CloudinaryUploadResult = {
@@ -411,6 +413,16 @@ export type WhatsappTemplateName =
 export type WhatsappTemplate = {
   name: WhatsappTemplateName;
   content: string;
+};
+
+export type WhatsappLog = {
+  id: string;
+  clinicId: string;
+  phone: string;
+  templateName: WhatsappTemplateName;
+  status: string;
+  response: string;
+  sentAt: PersistedTimestamp;
 };
 
 export type WhatsappVariables = Record<string, string>;

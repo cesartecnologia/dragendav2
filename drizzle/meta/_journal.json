@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1779316506841,
+      "tag": "0000_superb_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779365530400,
+      "tag": "0001_cynical_william_stryker",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779379324361,
+      "tag": "0002_perfect_sunspot",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779379586732,
+      "tag": "0003_sour_wildside",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779391614173,
+      "tag": "0004_pretty_retro_girl",
+      "breakpoints": true
+    }
+  ]
+}

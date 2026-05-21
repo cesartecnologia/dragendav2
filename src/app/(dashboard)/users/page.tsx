@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { Loader2, UserPlus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -9,7 +8,6 @@ import { z } from "zod";
 import { EmptyState } from "../../../components/shared/EmptyState";
 import { PageHeader } from "../../../components/shared/PageHeader";
 import { createSecondaryAuthUser, getAuthErrorMessage } from "../../../lib/firebase/auth";
-import { firestoreDb } from "../../../lib/firebase/config";
 import { useAuth } from "../../../lib/hooks/useAuth";
 import { useCreateEmployee, useEmployees, useUpdateEmployee } from "../../../lib/hooks/useEmployees";
 import { useUiStore } from "../../../lib/stores/uiStore";
@@ -65,16 +63,8 @@ const UsersPage = (): JSX.Element => {
         password: values.password,
       });
 
-      await setDoc(doc(firestoreDb, "users", credential.user.uid), {
-        clinicId,
-        role: values.role,
-        name: values.name,
-        email: values.email,
-        active: true,
-        createdAt: serverTimestamp(),
-      });
-
       await createEmployee.mutateAsync({
+        firebaseUid: credential.user.uid,
         name: values.name,
         email: values.email,
         phone: values.phone,

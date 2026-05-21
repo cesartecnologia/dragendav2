@@ -1,0 +1,1 @@
+CREATE INDEX "payments_clinic_status_created_idx" ON "payments" USING btree ("clinic_id","status","created_at");

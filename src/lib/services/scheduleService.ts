@@ -1,16 +1,5 @@
-import {
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
-import {
-  schedulesCollection,
-  updateTypedDoc,
-} from "../firebase/firestore";
 import type { Schedule, Slot } from "../types";
-import { isPastBrazilDateTime, todayISO } from "../utils/date";
+import { callDataService } from "./rpcClient";
 
 export const scheduleId = (doctorId: string, date: string): string =>
   `${doctorId}_${date}`;
@@ -19,47 +8,22 @@ export const getSchedule = async (
   clinicId: string,
   doctorId: string,
   date: string,
-): Promise<Schedule | null> => {
-  try {
-    const reference = doc(schedulesCollection(clinicId), scheduleId(doctorId, date));
-    const snapshot = await getDoc(reference);
-    return snapshot.exists() ? { ...snapshot.data(), id: snapshot.id } : null;
-  } catch (error: unknown) {
-    throw new Error(
-      error instanceof Error ? error.message : "Erro ao buscar agenda",
-    );
-  }
-};
+): Promise<Schedule | null> =>
+  await callDataService<Schedule | null>("schedules", "getSchedule", [clinicId, doctorId, date]);
 
 export const getAvailableSlots = async (
   clinicId: string,
   doctorId: string,
   date: string,
-): Promise<Slot[]> => {
-  const schedule = await getSchedule(clinicId, doctorId, date);
-  return schedule?.slots.filter((slot) => slot.available && !isPastBrazilDateTime(date, slot.time)) ?? [];
-};
+): Promise<Slot[]> =>
+  await callDataService<Slot[]>("schedules", "getAvailableSlots", [clinicId, doctorId, date]);
 
 export const getAvailableDates = async (
   clinicId: string,
   doctorId: string,
   month: string,
-): Promise<string[]> => {
-  const firstDay = `${month}-01`;
-  const dates = Array.from({ length: 31 }, (_, index) => {
-    const day = `${index + 1}`.padStart(2, "0");
-    return `${month}-${day}`;
-  });
-  const schedules = await Promise.all(
-    dates.map((date) => getSchedule(clinicId, doctorId, date)),
-  );
-  return schedules
-    .filter((schedule): schedule is Schedule => schedule !== null)
-    .filter((schedule) => schedule.date >= firstDay)
-    .filter((schedule) => schedule.date >= todayISO())
-    .filter((schedule) => schedule.slots.some((slot) => slot.available && !isPastBrazilDateTime(schedule.date, slot.time)))
-    .map((schedule) => schedule.date);
-};
+): Promise<string[]> =>
+  await callDataService<string[]>("schedules", "getAvailableDates", [clinicId, doctorId, month]);
 
 export const bookSlot = async (
   clinicId: string,
@@ -68,25 +32,7 @@ export const bookSlot = async (
   time: string,
   appointmentId: string,
 ): Promise<void> => {
-  const schedule = await getSchedule(clinicId, doctorId, date);
-
-  if (schedule === null) {
-    throw new Error("Agenda não encontrada");
-  }
-
-  if (isPastBrazilDateTime(date, time)) {
-    throw new Error("Não é permitido agendar em data ou horário retroativo");
-  }
-
-  const updatedSlots = schedule.slots.map((slot) =>
-    slot.time === time
-      ? { ...slot, available: false, appointmentId }
-      : slot,
-  );
-
-  await updateTypedDoc(doc(schedulesCollection(clinicId), schedule.id), {
-    slots: updatedSlots,
-  });
+  await callDataService<void>("schedules", "bookSlot", [clinicId, doctorId, date, time, appointmentId]);
 };
 
 export const freeSlot = async (
@@ -95,25 +41,9 @@ export const freeSlot = async (
   date: string,
   time: string,
 ): Promise<void> => {
-  const schedule = await getSchedule(clinicId, doctorId, date);
-
-  if (schedule === null) {
-    return;
-  }
-
-  const updatedSlots = schedule.slots.map((slot) =>
-    slot.time === time ? { ...slot, available: true, appointmentId: null } : slot,
-  );
-
-  await updateTypedDoc(doc(schedulesCollection(clinicId), schedule.id), {
-    slots: updatedSlots,
-  });
+  await callDataService<void>("schedules", "freeSlot", [clinicId, doctorId, date, time]);
 };
 
 export const saveSchedule = async (schedule: Schedule): Promise<void> => {
-  const reference = doc(schedulesCollection(schedule.clinicId), schedule.id);
-  await setDoc(reference, {
-    ...schedule,
-    createdAt: serverTimestamp(),
-  } as Schedule);
+  await callDataService<void>("schedules", "saveSchedule", [schedule]);
 };

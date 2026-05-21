@@ -1,50 +1,36 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { doc, getDoc } from "firebase/firestore";
-import { firestoreDb } from "../../../lib/firebase/config";
-import { getPaymentsPaginated, registerPayment } from "../../../lib/services/financialService";
+import { getPaymentsPaginated, registerPayment } from "../../../lib/serverServices/financialService";
 import { paymentSchema } from "../../../lib/validations/payment";
+import { verifyFirebaseIdToken } from "../../../lib/firebase/serverAuth";
+import { getUserByFirebaseUid, type ClientUser } from "../../../lib/services/authPostgresService";
 
-const getClinicId = (request: NextRequest): string | null => request.headers.get("x-clinic-id");
-const isAuthenticated = (request: NextRequest): boolean => (request.headers.get("authorization") ?? "").startsWith("Bearer ");
+const authenticate = async (request: NextRequest): Promise<ClientUser | null> => {
+  const authorization = request.headers.get("authorization") ?? "";
 
-const getUserName = async (request: NextRequest): Promise<string> => {
-  const userId = request.headers.get("x-user-id") ?? "";
-
-  if (userId.trim().length === 0) {
-    return "";
+  if (!authorization.startsWith("Bearer ")) {
+    return null;
   }
 
-  const snapshot = await getDoc(doc(firestoreDb, "users", userId));
-  const data = snapshot.exists() ? snapshot.data() : null;
-  const name = typeof data?.name === "string" ? data.name.trim() : "";
-
-  return name.length > 0 ? name : "";
+  const firebaseUser = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
+  return await getUserByFirebaseUid(firebaseUser.uid);
 };
 
 export const GET = async (request: NextRequest): Promise<NextResponse> => {
-  if (!isAuthenticated(request)) {
+  const user = await authenticate(request);
+
+  if (user === null || !user.active) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
-  const clinicId = getClinicId(request);
-
-  if (clinicId === null) {
-    return NextResponse.json({ message: "Clínica não identificada" }, { status: 400 });
-  }
-
-  const result = await getPaymentsPaginated(clinicId, {}, null);
+  const result = await getPaymentsPaginated(user.clinicId, {}, null);
   return NextResponse.json({ data: result.data, hasMore: result.hasMore });
 };
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
-  if (!isAuthenticated(request)) {
+  const user = await authenticate(request);
+
+  if (user === null || !user.active) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  }
-
-  const clinicId = getClinicId(request);
-
-  if (clinicId === null) {
-    return NextResponse.json({ message: "Clínica não identificada" }, { status: 400 });
   }
 
   const parsed = paymentSchema.safeParse(await request.json());
@@ -53,9 +39,9 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     return NextResponse.json({ message: "Dados inválidos" }, { status: 400 });
   }
 
-  const payment = await registerPayment(clinicId, {
+  const payment = await registerPayment(user.clinicId, {
     ...parsed.data,
-    createdBy: await getUserName(request),
+    createdBy: user.name,
   });
 
   return NextResponse.json(payment, { status: 201 });

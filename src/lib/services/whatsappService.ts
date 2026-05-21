@@ -1,24 +1,14 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
-import { firestoreDb } from "../firebase/config";
-import { clinicDoc } from "../firebase/firestore";
 import { formatWhatsAppPhone } from "../utils/masks";
 import { formatDateBR } from "../utils/date";
 import { formatMoney } from "../utils/money";
 import type {
   Appointment,
   Clinic,
-  WhatsappConnectionResult,
-  WhatsappSendResult,
   WhatsappTemplate,
   WhatsappTemplateName,
   WhatsappVariables,
+  WhatsappConnectionResult,
+  WhatsappSendResult,
 } from "../types";
 
 export type WhatsAppLinkInput = {
@@ -87,61 +77,41 @@ export const defaultWhatsappTemplates: WhatsappTemplate[] = [
   },
 ];
 
-const applyVariables = (
-  template: string,
-  variables: WhatsappVariables,
-): string => {
-  return Object.entries(variables).reduce(
-    (message, [key, value]) => message.replaceAll(`{${key}}`, value),
-    template,
-  );
-};
-
-const getClinic = async (clinicId: string): Promise<Clinic> => {
-  const snapshot = await getDoc(clinicDoc(clinicId));
-
-  if (!snapshot.exists()) {
-    throw new Error("Clínica não encontrada");
-  }
-
-  return { ...snapshot.data(), id: snapshot.id };
-};
-
 export const getTemplates = async (
-  clinicId: string,
+  _clinicId: string,
 ): Promise<WhatsappTemplate[]> => {
-  const snapshot = await getDocs(
-    collection(firestoreDb, "clinics", clinicId, "settings", "whatsapp", "templates"),
-  );
+  const response = await fetch("/api/whatsapp/templates", {
+    credentials: "same-origin",
+  });
 
-  if (snapshot.empty) {
-    return defaultWhatsappTemplates;
+  if (!response.ok) {
+    throw new Error("Não foi possível carregar templates");
   }
 
-  return snapshot.docs.map((item) => item.data() as WhatsappTemplate);
+  const payload = (await response.json()) as { templates: WhatsappTemplate[] };
+  return payload.templates;
 };
 
 export const updateTemplate = async (
-  clinicId: string,
+  _clinicId: string,
   templateName: WhatsappTemplateName,
   content: string,
 ): Promise<void> => {
-  await setDoc(
-    doc(
-      firestoreDb,
-      "clinics",
-      clinicId,
-      "settings",
-      "whatsapp",
-      "templates",
-      templateName,
-    ),
-    {
+  const response = await fetch("/api/whatsapp/templates", {
+    method: "PATCH",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
       name: templateName,
       content,
-      updatedAt: serverTimestamp(),
-    },
-  );
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Não foi possível salvar template");
+  }
 };
 
 export const sendMessage = async (
@@ -150,57 +120,38 @@ export const sendMessage = async (
   templateName: WhatsappTemplateName,
   variables: WhatsappVariables,
 ): Promise<WhatsappSendResult> => {
-  const clinic = await getClinic(clinicId);
-  const templates = await getTemplates(clinicId);
-  const template = templates.find((item) => item.name === templateName);
-
-  if (template === undefined) {
-    throw new Error("Template não encontrado");
-  }
-
-  const message = applyVariables(template.content, variables);
-  const response = await fetch(`${clinic.whatsappApiUrl}/message/sendText`, {
+  const response = await fetch("/api/whatsapp/send", {
     method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${clinic.whatsappToken}`,
     },
     body: JSON.stringify({
-      number: formatWhatsAppPhone(phone),
-      text: message,
+      clinicId,
+      phone,
+      templateName,
+      variables,
     }),
   });
-  const payload = (await response.json().catch(() => ({
-    key: { id: "" },
-  }))) as { key?: { id?: string } };
-  const messageId = payload.key?.id ?? "";
 
-  await setDoc(doc(collection(firestoreDb, "clinics", clinicId, "whatsappLogs")), {
-    phone: formatWhatsAppPhone(phone),
-    templateName,
-    sentAt: serverTimestamp(),
-    status: response.ok ? "sent" : "error",
-    response: messageId,
-  });
+  if (!response.ok) {
+    throw new Error("Não foi possível enviar WhatsApp");
+  }
 
-  return {
-    success: response.ok,
-    messageId,
-  };
+  return (await response.json()) as WhatsappSendResult;
 };
 
 export const testConnection = async (
   clinicId: string,
 ): Promise<WhatsappConnectionResult> => {
-  const clinic = await getClinic(clinicId);
-  const response = await fetch(`${clinic.whatsappApiUrl}/instance/connectionState`, {
-    headers: {
-      Authorization: `Bearer ${clinic.whatsappToken}`,
-    },
+  const response = await fetch("/api/whatsapp/test", {
+    method: "POST",
+    credentials: "same-origin",
   });
 
-  return {
-    connected: response.ok,
-    phone: clinic.whatsappPhone,
-  };
+  if (!response.ok) {
+    throw new Error("Não foi possível testar conexão");
+  }
+
+  return (await response.json()) as WhatsappConnectionResult;
 };

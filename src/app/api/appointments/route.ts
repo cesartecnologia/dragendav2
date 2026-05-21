@@ -1,55 +1,36 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { doc, getDoc } from "firebase/firestore";
-import { firestoreDb } from "../../../lib/firebase/config";
 import { appointmentCreateSchema } from "../../../lib/validations/appointment";
-import { createAppointment, getAppointmentsPaginated } from "../../../lib/services/appointmentService";
+import { createAppointment, getAppointmentsPaginated } from "../../../lib/serverServices/appointmentService";
+import { verifyFirebaseIdToken } from "../../../lib/firebase/serverAuth";
+import { getUserByFirebaseUid, type ClientUser } from "../../../lib/services/authPostgresService";
 
-const getClinicId = (request: NextRequest): string | null => {
-  return request.headers.get("x-clinic-id");
-};
+const authenticate = async (request: NextRequest): Promise<ClientUser | null> => {
+  const authorization = request.headers.get("authorization") ?? "";
 
-const isAuthenticated = (request: NextRequest): boolean => {
-  return (request.headers.get("authorization") ?? "").startsWith("Bearer ");
-};
-
-const getUserName = async (request: NextRequest): Promise<string> => {
-  const userId = request.headers.get("x-user-id") ?? "";
-
-  if (userId.trim().length === 0) {
-    return "";
+  if (!authorization.startsWith("Bearer ")) {
+    return null;
   }
 
-  const snapshot = await getDoc(doc(firestoreDb, "users", userId));
-  const data = snapshot.exists() ? snapshot.data() : null;
-  const name = typeof data?.name === "string" ? data.name.trim() : "";
-
-  return name.length > 0 ? name : "";
+  const firebaseUser = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
+  return await getUserByFirebaseUid(firebaseUser.uid);
 };
 
 export const GET = async (request: NextRequest): Promise<NextResponse> => {
-  if (!isAuthenticated(request)) {
+  const user = await authenticate(request);
+
+  if (user === null || !user.active) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
-  const clinicId = getClinicId(request);
-
-  if (clinicId === null) {
-    return NextResponse.json({ message: "Clínica não identificada" }, { status: 400 });
-  }
-
-  const result = await getAppointmentsPaginated(clinicId, {}, null);
+  const result = await getAppointmentsPaginated(user.clinicId, {}, null);
   return NextResponse.json({ data: result.data, hasMore: result.hasMore });
 };
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
-  if (!isAuthenticated(request)) {
+  const user = await authenticate(request);
+
+  if (user === null || !user.active) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  }
-
-  const clinicId = getClinicId(request);
-
-  if (clinicId === null) {
-    return NextResponse.json({ message: "Clínica não identificada" }, { status: 400 });
   }
 
   const body = (await request.json()) as unknown;
@@ -59,12 +40,12 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     return NextResponse.json({ message: "Dados inválidos" }, { status: 400 });
   }
 
-  const appointment = await createAppointment(clinicId, {
+  const appointment = await createAppointment(user.clinicId, {
     ...parsed.data,
     status: "scheduled",
     paymentStatus: "pending",
     whatsappSent: false,
-    createdBy: await getUserName(request),
+    createdBy: user.name,
   });
 
   return NextResponse.json(appointment, { status: 201 });

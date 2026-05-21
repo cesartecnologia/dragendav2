@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { sendMessage } from "../../../../lib/services/whatsappService";
+import { getSessionUserFromRequest } from "../../../../lib/auth/apiSession";
+import { sendMessage } from "../../../../lib/serverServices/whatsappService";
 
 const schema = z.object({
   phone: z.string().min(10, "Telefone inválido"),
@@ -10,7 +11,9 @@ const schema = z.object({
 });
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
-  if (!(request.headers.get("authorization") ?? "").startsWith("Bearer ")) {
+  const user = await getSessionUserFromRequest(request);
+
+  if (user === null || !user.active) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
@@ -20,7 +23,10 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     return NextResponse.json({ message: "Dados inválidos" }, { status: 400 });
   }
 
-  const result = await sendMessage(parsed.data.clinicId, parsed.data.phone, parsed.data.templateName, parsed.data.variables);
+  if (parsed.data.clinicId !== user.clinicId) {
+    return NextResponse.json({ message: "Clínica não autorizada" }, { status: 403 });
+  }
+
+  const result = await sendMessage(user.clinicId, parsed.data.phone, parsed.data.templateName, parsed.data.variables);
   return NextResponse.json(result);
 };
-

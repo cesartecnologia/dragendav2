@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "migrate:firestore": "tsx scripts/migrate-firestore-to-postgres.ts"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^16.6.0",
@@ -17,12 +22,15 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
+    "drizzle-orm": "^0.45.2",
     "firebase": "^12.13.0",
+    "firebase-admin": "^13.10.0",
     "formidable": "^3.5.2",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.468.0",
     "next": "^16.2.6",
+    "postgres": "^3.4.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
@@ -38,10 +46,12 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^8.57.1",
     "eslint-config-next": "^16.2.6",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.22.3",
     "typescript": "^5.7.2"
   }
 }
