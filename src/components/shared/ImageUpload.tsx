@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
-import { ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ImagePlus, Loader2, Trash2, X } from "lucide-react";
 import { uploadImage } from "../../lib/cloudinary/upload";
 import type { CloudinaryUploadResult } from "../../lib/types";
 
@@ -26,6 +26,75 @@ export const ImageUpload = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const [positionX, setPositionX] = useState(50);
+  const [positionY, setPositionY] = useState(50);
+
+  useEffect(() => {
+    if (pendingFile === null) {
+      setPreviewUrl("");
+      return;
+    }
+
+    const url = URL.createObjectURL(pendingFile);
+    setPreviewUrl(url);
+
+    return () => URL.revokeObjectURL(url);
+  }, [pendingFile]);
+
+  const createAdjustedImage = async (file: File): Promise<File> => {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Não foi possível carregar a imagem"));
+      img.src = URL.createObjectURL(file);
+    });
+    const canvas = document.createElement("canvas");
+    const outputSize = 800;
+    const context = canvas.getContext("2d");
+
+    if (context === null) {
+      throw new Error("Não foi possível preparar o corte da imagem");
+    }
+
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, outputSize, outputSize);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+
+    const baseScale = Math.max(outputSize / image.width, outputSize / image.height);
+    const scale = baseScale * zoom;
+    const drawWidth = image.width * scale;
+    const drawHeight = image.height * scale;
+    const maxOffsetX = Math.max(drawWidth - outputSize, 0);
+    const maxOffsetY = Math.max(drawHeight - outputSize, 0);
+    const x = -maxOffsetX * (positionX / 100);
+    const y = -maxOffsetY * (positionY / 100);
+
+    context.drawImage(image, x, y, drawWidth, drawHeight);
+    URL.revokeObjectURL(image.src);
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) => {
+          if (result === null) {
+            reject(new Error("Não foi possível gerar a imagem ajustada"));
+            return;
+          }
+
+          resolve(result);
+        },
+        file.type,
+        0.92,
+      );
+    });
+
+    return new File([blob], file.name, { type: file.type });
+  };
 
   const handleChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -36,22 +105,32 @@ export const ImageUpload = ({
       return;
     }
 
+    setPendingFile(file);
+    setZoom(1);
+    setPositionX(50);
+    setPositionY(50);
+    setError(null);
+    if (inputRef.current !== null) {
+      inputRef.current.value = "";
+    }
+  };
+
+  const uploadPendingFile = async (): Promise<void> => {
+    if (pendingFile === null) {
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
-      const result = await uploadImage(file, folder);
+      const adjustedFile = await createAdjustedImage(pendingFile);
+      const result = await uploadImage(adjustedFile, folder);
       onUploaded(result);
+      setPendingFile(null);
     } catch (uploadError: unknown) {
-      setError(
-        uploadError instanceof Error
-          ? uploadError.message
-          : "Erro ao enviar imagem",
-      );
+      setError(uploadError instanceof Error ? uploadError.message : "Erro ao enviar imagem");
     } finally {
       setIsLoading(false);
-      if (inputRef.current !== null) {
-        inputRef.current.value = "";
-      }
     }
   };
 
@@ -106,6 +185,59 @@ export const ImageUpload = ({
         </label>
       </div>
       {error !== null ? <span className="text-xs text-clinic-danger">{error}</span> : null}
+      {pendingFile !== null ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={() => setPendingFile(null)} role="presentation">
+          <div className="w-full max-w-lg rounded-md bg-clinic-surface p-5 shadow-xl" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-clinic-text">Ajustar imagem</h2>
+                <p className="mt-1 text-sm text-clinic-muted">Posicione e corte a foto antes de enviar.</p>
+              </div>
+              <button type="button" onClick={() => setPendingFile(null)} className="rounded-md border border-clinic-border p-2 text-clinic-muted" aria-label="Fechar">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-[240px_1fr]">
+              <div className="relative h-60 w-60 overflow-hidden rounded-md border border-clinic-border bg-clinic-bg">
+                {previewUrl.length > 0 ? (
+                  <img
+                    src={previewUrl}
+                    alt="Pré-visualização"
+                    className="h-full w-full object-cover"
+                    style={{
+                      transform: `scale(${zoom})`,
+                      transformOrigin: `${positionX}% ${positionY}%`,
+                    }}
+                  />
+                ) : null}
+              </div>
+              <div className="grid content-start gap-4">
+                <label className="grid gap-1 text-sm text-clinic-text">
+                  Zoom
+                  <input type="range" min="1" max="2.5" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} />
+                </label>
+                <label className="grid gap-1 text-sm text-clinic-text">
+                  Posição horizontal
+                  <input type="range" min="0" max="100" step="1" value={positionX} onChange={(event) => setPositionX(Number(event.target.value))} />
+                </label>
+                <label className="grid gap-1 text-sm text-clinic-text">
+                  Posição vertical
+                  <input type="range" min="0" max="100" step="1" value={positionY} onChange={(event) => setPositionY(Number(event.target.value))} />
+                </label>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setPendingFile(null)} disabled={isLoading} className="rounded-md border border-clinic-border px-4 py-2 text-sm">
+                Cancelar
+              </button>
+              <button type="button" onClick={uploadPendingFile} disabled={isLoading} className="inline-flex items-center gap-2 rounded-md bg-clinic-primary px-4 py-2 text-sm text-white disabled:opacity-60">
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Enviar imagem
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

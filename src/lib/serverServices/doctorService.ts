@@ -4,6 +4,7 @@ import {
   isAfter,
   isBefore,
   parse,
+  startOfDay,
 } from "date-fns";
 import { format } from "date-fns";
 import { and, asc, eq } from "drizzle-orm";
@@ -35,13 +36,16 @@ const buildSlots = (period: ConsultationPeriod): Slot[] => {
   const slots: Slot[] = [];
   const start = timeToMinutes(period.startTime);
   const end = timeToMinutes(period.endTime);
+  const capacity = Math.max(period.maxPatients, 1);
 
   for (let minute = start; minute < end; minute += period.slotMin) {
-    slots.push({
-      time: minutesToTime(minute),
-      available: true,
-      appointmentId: null,
-    });
+    for (let index = 0; index < capacity; index += 1) {
+      slots.push({
+        time: minutesToTime(minute),
+        available: true,
+        appointmentId: null,
+      });
+    }
   }
 
   return slots;
@@ -77,7 +81,9 @@ export const createDoctor = async (
     throw new Error("Não foi possível criar médico");
   }
 
-  return doctorFromRow(row);
+  const doctor = doctorFromRow(row);
+  await regenerateSchedules(clinicId, doctor.id);
+  return doctor;
 };
 
 export const updateDoctor = async (
@@ -104,6 +110,10 @@ export const updateDoctor = async (
       updatedAt: new Date(),
     })
     .where(and(eq(doctors.clinicId, clinicId), eq(doctors.id, id)));
+
+  if (data.periods !== undefined || data.vacations !== undefined) {
+    await regenerateSchedules(clinicId, id);
+  }
 };
 
 export const softDeleteDoctor = async (
@@ -171,8 +181,9 @@ export const regenerateSchedules = async (
   }
 
   const db = getDb();
-  const today = new Date();
+  const today = startOfDay(new Date());
   const maxDate = addDays(today, daysAhead);
+  const desiredScheduleIds = new Set<string>();
 
   for (const period of doctor.periods) {
     const startDate = parse(period.startDate, "yyyy-MM-dd", new Date());
@@ -220,6 +231,7 @@ export const regenerateSchedules = async (
         date: dateIso,
         slots: buildSlots(period),
       };
+      desiredScheduleIds.add(dateIso);
       const currentSlots = current?.slots ?? [];
       const mergedSlots = schedule.slots.map((slot) => {
         const currentSlot = currentSlots.find((item) => item.time === slot.time);
@@ -236,6 +248,33 @@ export const regenerateSchedules = async (
           .set({ slots: mergedSlots, updatedAt: new Date() })
           .where(eq(schedules.id, current.id));
       }
+    }
+  }
+
+  const futureRows = await db
+    .select()
+    .from(schedules)
+    .where(and(eq(schedules.clinicId, clinicId), eq(schedules.doctorId, doctorId)));
+
+  for (const row of futureRows) {
+    if (row.date < format(today, "yyyy-MM-dd") || desiredScheduleIds.has(row.date)) {
+      continue;
+    }
+
+    const hasAppointments = row.slots.some((slot) => slot.appointmentId !== null);
+
+    if (hasAppointments) {
+      await db
+        .update(schedules)
+        .set({
+          slots: row.slots
+            .filter((slot) => slot.appointmentId !== null)
+            .map((slot) => ({ ...slot, available: false })),
+          updatedAt: new Date(),
+        })
+        .where(eq(schedules.id, row.id));
+    } else {
+      await db.delete(schedules).where(eq(schedules.id, row.id));
     }
   }
 };

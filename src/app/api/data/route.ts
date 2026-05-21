@@ -11,6 +11,7 @@ import * as scheduleService from "../../../lib/serverServices/scheduleService";
 import * as specialtyService from "../../../lib/serverServices/specialtyService";
 import { verifyFirebaseIdToken } from "../../../lib/firebase/serverAuth";
 import { getUserByFirebaseUid } from "../../../lib/services/authPostgresService";
+import { getBillingAccess } from "../../../lib/services/subscriptionService";
 
 export const runtime = "nodejs";
 
@@ -71,6 +72,15 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
 
     if (user === null || !user.active) {
       return NextResponse.json({ message: "Usuário sem acesso" }, { status: 403 });
+    }
+
+    const access = await getBillingAccess(user.clinicId, user.email);
+
+    if (!access.allowed) {
+      return NextResponse.json(
+        { message: "Assinatura necessária para continuar" },
+        { status: 402 },
+      );
     }
 
     const body = (await request.json()) as unknown;

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { clinics, users } from "../db/schema";
+import { clinics, subscriptions, users } from "../db/schema";
 import type { Address, Role, User } from "../types";
 
 export type ClientUser = Omit<User, "createdAt"> & {
@@ -105,6 +105,26 @@ export const bootstrapClinicOwner = async (
         target: clinics.id,
       });
 
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+    const trialDate = trialEndsAt.toISOString().slice(0, 10);
+
+    await tx
+      .insert(subscriptions)
+      .values({
+        clinicId: input.clinicId,
+        provider: "asaas",
+        status: "trialing",
+        plan: "starter",
+        amount: 9990,
+        nextDueDate: trialDate,
+        currentPeriodEnd: trialDate,
+        trialEndsAt,
+      })
+      .onConflictDoNothing({
+        target: subscriptions.clinicId,
+      });
+
     const userRows = await tx
       .insert(users)
       .values({
@@ -173,6 +193,26 @@ export const syncFirebaseUserToPostgres = async (
       })
       .onConflictDoNothing({
         target: clinics.id,
+      });
+
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+    const trialDate = trialEndsAt.toISOString().slice(0, 10);
+
+    await tx
+      .insert(subscriptions)
+      .values({
+        clinicId: input.clinicId,
+        provider: "asaas",
+        status: "trialing",
+        plan: "starter",
+        amount: 9990,
+        nextDueDate: trialDate,
+        currentPeriodEnd: trialDate,
+        trialEndsAt,
+      })
+      .onConflictDoNothing({
+        target: subscriptions.clinicId,
       });
 
     const insertedUsers = await tx

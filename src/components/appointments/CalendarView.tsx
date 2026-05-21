@@ -91,7 +91,7 @@ export const CalendarView = ({
       </div>
       <div className="max-h-[620px] overflow-auto">
         {hours.map((hour) => (
-          <div key={hour} className="grid min-h-24 grid-cols-[64px_repeat(7,minmax(120px,1fr))] border-b border-clinic-border last:border-b-0">
+          <div key={hour} className="grid min-h-28 grid-cols-[56px_repeat(7,minmax(104px,1fr))] border-b border-clinic-border last:border-b-0">
             <div className="border-r border-clinic-border p-2 text-center text-sm text-clinic-muted">
               {hour}:00
             </div>
@@ -101,39 +101,42 @@ export const CalendarView = ({
               );
               const isToday = date === toDateKey(new Date());
               return (
-                <button
+                <div
                   key={`${date}_${hour}`}
-                  type="button"
-                  onClick={() => {
-                    if (items[0] !== undefined) {
-                      setSelectedAppointment(items[0]);
-                      return;
-                    }
-
-                    onEmptySlot?.(date, `${hour}:00`);
-                  }}
-                  className={`min-h-24 border-r border-clinic-border p-2 text-left last:border-r-0 hover:bg-clinic-bg ${isToday ? "bg-clinic-primary/5 ring-1 ring-inset ring-clinic-primary/30" : ""}`}
+                  className={`min-h-28 border-r border-clinic-border p-1.5 text-left last:border-r-0 hover:bg-clinic-bg ${isToday ? "bg-clinic-primary/5 ring-1 ring-inset ring-clinic-primary/30" : ""}`}
                 >
-                  {items.map((appointment) => (
+                  <div className="grid max-h-24 gap-1 overflow-y-auto pr-1">
+                    {items.map((appointment) => (
                     (() => {
                       const specialtyColor = getSpecialtyColor(appointment.specialty);
                       return (
-                    <div
+                    <button
                       key={appointment.id}
-                      className="mb-2 rounded-md border border-l-8 border-clinic-border bg-white p-2 shadow-sm"
+                      type="button"
+                      onClick={() => setSelectedAppointment(appointment)}
+                      className="rounded-md border border-l-4 border-clinic-border bg-white p-1.5 text-left shadow-sm"
                       style={{ borderLeftColor: specialtyColor.border }}
                     >
                       <p className="text-xs font-semibold text-clinic-text">
                         {appointment.time} · {appointment.patientName}
                       </p>
-                      <p className="truncate text-xs text-clinic-muted">
+                      <p className="text-[11px] leading-tight text-clinic-muted">
                         {appointment.doctorName} · {appointment.specialty}
                       </p>
-                    </div>
+                    </button>
                       );
                     })()
-                  ))}
-                </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onEmptySlot?.(date, `${hour}:00`)}
+                    className="mt-1 h-5 w-full rounded-sm text-left text-[10px] text-transparent hover:bg-clinic-primary/10 hover:px-1 hover:text-clinic-primary"
+                    aria-label={`Novo agendamento em ${formatDateBR(date)} às ${hour}:00`}
+                  >
+                    Novo
+                  </button>
+                </div>
               );
             })}
           </div>

@@ -36,7 +36,17 @@ export const getAvailableSlots = async (
   date: string,
 ): Promise<Slot[]> => {
   const schedule = await getSchedule(clinicId, doctorId, date);
-  return schedule?.slots.filter((slot) => slot.available && !isPastBrazilDateTime(date, slot.time)) ?? [];
+  const available = schedule?.slots.filter((slot) => slot.available && !isPastBrazilDateTime(date, slot.time)) ?? [];
+  const seen = new Set<string>();
+
+  return available.filter((slot) => {
+    if (seen.has(slot.time)) {
+      return false;
+    }
+
+    seen.add(slot.time);
+    return true;
+  });
 };
 
 export const getAvailableDates = async (
@@ -76,11 +86,19 @@ export const bookSlot = async (
     throw new Error("Não é permitido agendar em data ou horário retroativo");
   }
 
-  const updatedSlots = schedule.slots.map((slot) =>
-    slot.time === time
-      ? { ...slot, available: false, appointmentId }
-      : slot,
-  );
+  let booked = false;
+  const updatedSlots = schedule.slots.map((slot) => {
+    if (!booked && slot.time === time && slot.available) {
+      booked = true;
+      return { ...slot, available: false, appointmentId };
+    }
+
+    return slot;
+  });
+
+  if (!booked) {
+    throw new Error("Horário indisponível");
+  }
 
   await getDb()
     .update(schedules)
@@ -100,9 +118,15 @@ export const freeSlot = async (
     return;
   }
 
-  const updatedSlots = schedule.slots.map((slot) =>
-    slot.time === time ? { ...slot, available: true, appointmentId: null } : slot,
-  );
+  let released = false;
+  const updatedSlots = schedule.slots.map((slot) => {
+    if (!released && slot.time === time && slot.appointmentId !== null) {
+      released = true;
+      return { ...slot, available: true, appointmentId: null };
+    }
+
+    return slot;
+  });
 
   await getDb()
     .update(schedules)

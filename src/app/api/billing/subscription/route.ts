@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getUserByFirebaseUid } from "../../../../lib/services/authPostgresService";
 import {
   createClinicSubscription,
+  getBillingAccess,
   getSubscriptionByClinic,
 } from "../../../../lib/services/subscriptionService";
 import { getBearerToken, verifyFirebaseIdToken } from "../../../../lib/firebase/serverAuth";
@@ -38,7 +39,8 @@ export const GET = async (request: NextRequest): Promise<NextResponse> => {
   }
 
   const subscription = await getSubscriptionByClinic(user.clinicId);
-  return NextResponse.json({ subscription });
+  const access = await getBillingAccess(user.clinicId, user.email);
+  return NextResponse.json({ subscription, access });
 };
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {

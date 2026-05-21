@@ -35,6 +35,21 @@ export type AsaasSubscriptionInput = {
   cycle: AsaasCycle;
   description: string;
   externalReference: string;
+  creditCard?: {
+    holderName: string;
+    number: string;
+    expiryMonth: string;
+    expiryYear: string;
+    ccv: string;
+  };
+  creditCardHolderInfo?: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+    postalCode: string;
+    addressNumber: string;
+    phone: string;
+  };
 };
 
 export type AsaasSubscriptionResponse = {
@@ -43,6 +58,8 @@ export type AsaasSubscriptionResponse = {
   status: string;
   value: number;
   nextDueDate: string;
+  invoiceUrl?: string;
+  bankSlipUrl?: string;
 };
 
 export type AsaasErrorResponse = {

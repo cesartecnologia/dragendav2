@@ -58,6 +58,7 @@ export const useCreateDoctor = (clinicId: string, filters: DoctorFilters = {}) =
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: key });
+      await queryClient.invalidateQueries({ queryKey: ["available-slots"] });
     },
   });
 };
@@ -81,8 +82,11 @@ export const useUpdateDoctor = (clinicId: string, filters: DoctorFilters = {}) =
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
+    onSettled: async (_data, _error, variables) => {
       await queryClient.invalidateQueries({ queryKey: key });
+      await queryClient.invalidateQueries({ queryKey: ["doctor", clinicId, variables.id] });
+      await queryClient.invalidateQueries({ queryKey: ["available-slots"] });
+      await queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
   });
 };

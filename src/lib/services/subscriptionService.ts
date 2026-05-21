@@ -27,12 +27,37 @@ export type SubscriptionView = {
   amount: number;
   nextDueDate: string | null;
   currentPeriodEnd: string | null;
+  paymentUrl?: string | null;
 };
 
 export type CreateSubscriptionInput = {
   clinicId: string;
   plan: ClinicPlan;
   amount: number;
+  billingType?: "CREDIT_CARD" | "BOLETO";
+  holder?: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+    phone: string;
+    postalCode: string;
+    addressNumber: string;
+  };
+  creditCard?: {
+    holderName: string;
+    number: string;
+    expiryMonth: string;
+    expiryYear: string;
+    ccv: string;
+  };
+};
+
+export type BillingAccess = {
+  allowed: boolean;
+  master: boolean;
+  status: SubscriptionStatus | "none";
+  trialEndsAt: string | null;
+  subscription: SubscriptionView | null;
 };
 
 export type AsaasWebhookPayment = {
@@ -78,6 +103,96 @@ const subscriptionFromRow = (
   nextDueDate: row.nextDueDate,
   currentPeriodEnd: row.currentPeriodEnd,
 });
+
+const isMasterEmail = (email: string): boolean => {
+  const emails = process.env.MASTER_USER_EMAILS ?? "";
+  return emails
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => item.length > 0)
+    .includes(email.trim().toLowerCase());
+};
+
+export const ensureTrialSubscription = async (
+  clinicId: string,
+): Promise<SubscriptionView> => {
+  const existing = await getSubscriptionByClinic(clinicId);
+
+  if (existing !== null) {
+    return existing;
+  }
+
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+  const trialDate = trialEndsAt.toISOString().slice(0, 10);
+  const row = (
+    await getDb()
+      .insert(subscriptions)
+      .values({
+        clinicId,
+        provider: "asaas",
+        status: "trialing",
+        plan: "starter",
+        amount: 9990,
+        nextDueDate: trialDate,
+        currentPeriodEnd: trialDate,
+        trialEndsAt,
+      })
+      .onConflictDoNothing({
+        target: subscriptions.clinicId,
+      })
+      .returning()
+  )[0];
+
+  if (row !== undefined) {
+    return subscriptionFromRow(row);
+  }
+
+  const afterConflict = await getSubscriptionByClinic(clinicId);
+
+  if (afterConflict === null) {
+    throw new Error("Não foi possível criar período de teste");
+  }
+
+  return afterConflict;
+};
+
+export const getBillingAccess = async (
+  clinicId: string,
+  email: string,
+): Promise<BillingAccess> => {
+  if (isMasterEmail(email)) {
+    return {
+      allowed: true,
+      master: true,
+      status: "active",
+      trialEndsAt: null,
+      subscription: await getSubscriptionByClinic(clinicId),
+    };
+  }
+
+  const subscription = await ensureTrialSubscription(clinicId);
+  const trialEndsAt = (
+    await getDb()
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.clinicId, clinicId))
+      .limit(1)
+  )[0]?.trialEndsAt ?? null;
+  const trialActive =
+    subscription.status === "trialing" &&
+    trialEndsAt !== null &&
+    trialEndsAt.getTime() >= Date.now();
+  const paidActive = subscription.status === "active";
+
+  return {
+    allowed: paidActive || trialActive,
+    master: false,
+    status: subscription.status,
+    trialEndsAt: trialEndsAt?.toISOString() ?? null,
+    subscription,
+  };
+};
 
 const mapAsaasStatus = (event: string, status: string | undefined): SubscriptionStatus => {
   if (event.includes("DELETED") || event.includes("CANCELLED")) {
@@ -215,13 +330,28 @@ export const createClinicSubscription = async (
   });
   const subscription = await createAsaasSubscription({
     customer: customer.id,
-    billingType: ASAAS_BILLING_TYPE.UNDEFINED,
+    billingType: input.billingType ?? ASAAS_BILLING_TYPE.UNDEFINED,
     value: input.amount / 100,
     nextDueDate: nextDueDate.toISOString().slice(0, 10),
     cycle: ASAAS_CYCLE.MONTHLY,
     description: `Assinatura ${input.plan} - Dr. Agenda`,
     externalReference: input.clinicId,
+    ...(input.creditCard !== undefined && input.holder !== undefined
+      ? {
+          creditCard: input.creditCard,
+          creditCardHolderInfo: {
+            name: input.holder.name,
+            email: input.holder.email,
+            cpfCnpj: input.holder.cpfCnpj,
+            postalCode: input.holder.postalCode,
+            addressNumber: input.holder.addressNumber,
+            phone: input.holder.phone,
+          },
+        }
+      : {}),
   });
+  const initialStatus: SubscriptionStatus =
+    input.billingType === "CREDIT_CARD" ? "active" : "trialing";
   const row = (
     await db
       .insert(subscriptions)
@@ -230,7 +360,7 @@ export const createClinicSubscription = async (
         provider: "asaas",
         providerCustomerId: customer.id,
         providerSubscriptionId: subscription.id,
-        status: "active",
+        status: initialStatus,
         plan: input.plan,
         amount: input.amount,
         nextDueDate: subscription.nextDueDate,
@@ -241,7 +371,7 @@ export const createClinicSubscription = async (
         set: {
           providerCustomerId: customer.id,
           providerSubscriptionId: subscription.id,
-          status: "active",
+          status: initialStatus,
           plan: input.plan,
           amount: input.amount,
           nextDueDate: subscription.nextDueDate,
@@ -256,5 +386,8 @@ export const createClinicSubscription = async (
     throw new Error("Não foi possível criar assinatura");
   }
 
-  return subscriptionFromRow(row);
+  return {
+    ...subscriptionFromRow(row),
+    paymentUrl: subscription.bankSlipUrl ?? subscription.invoiceUrl ?? null,
+  };
 };
