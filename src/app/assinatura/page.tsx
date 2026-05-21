@@ -10,7 +10,6 @@ import {
   FileText,
   HeartPulse,
   Loader2,
-  MessageCircle,
   ShieldCheck,
   Sparkles,
   Stethoscope,
@@ -74,11 +73,6 @@ const benefits: Benefit[] = [
     title: "Gestão médica",
     description: "Médicos, CRM, fotos, períodos, férias, convênios e exames.",
     icon: Stethoscope,
-  },
-  {
-    title: "WhatsApp integrado",
-    description: "Confirmações, lembretes e cobranças para reduzir faltas.",
-    icon: MessageCircle,
   },
   {
     title: "Financeiro claro",
@@ -227,7 +221,7 @@ const SubscriptionPage = (): JSX.Element => {
                 <span className="text-sky-700">/mês</span>
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 md:text-lg">
-                Agenda, pacientes, médicos, financeiro, relatórios e WhatsApp em uma plataforma simples para a rotina da clínica.
+                Agenda, pacientes, médicos, financeiro e relatórios em uma plataforma simples para a rotina da clínica.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <button
@@ -261,13 +255,13 @@ const SubscriptionPage = (): JSX.Element => {
             <div className="relative">
               <div className="absolute -inset-5 rounded-[32px] bg-sky-300/20 blur-3xl" />
               <div className="relative rounded-md border border-white bg-white p-4 shadow-2xl shadow-sky-950/10">
-                <div className="rounded-md border border-sky-100 bg-slate-950 p-4 text-white">
+                <div className="rounded-md border border-sky-200 bg-gradient-to-br from-sky-600 to-sky-400 p-4 text-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-sky-100">Agenda de hoje</p>
+                      <p className="text-sm text-sky-50">Agenda de hoje</p>
                       <p className="mt-1 text-2xl font-bold">18 consultas</p>
                     </div>
-                    <HeartPulse className="h-10 w-10 rounded-md bg-sky-500/20 p-2 text-sky-200" />
+                    <HeartPulse className="h-10 w-10 rounded-md bg-white/20 p-2 text-white" />
                   </div>
                   <div className="mt-5 grid gap-2">
                     {[
@@ -275,11 +269,11 @@ const SubscriptionPage = (): JSX.Element => {
                       ["09:00", "Dr. Marcos", "Dermatologia"],
                       ["09:00", "Dra. Camila", "Pediatria"],
                     ].map(([time, doctor, specialty]) => (
-                      <div key={`${time}-${doctor}`} className="grid grid-cols-[56px_1fr] items-center gap-3 rounded-md bg-white/10 p-3">
-                        <span className="rounded-md bg-sky-300 px-2 py-1 text-center text-xs font-bold text-slate-950">{time}</span>
+                      <div key={`${time}-${doctor}`} className="grid grid-cols-[56px_1fr] items-center gap-3 rounded-md bg-white/20 p-3">
+                        <span className="rounded-md bg-white px-2 py-1 text-center text-xs font-bold text-sky-800">{time}</span>
                         <div>
                           <p className="text-sm font-semibold">{doctor}</p>
-                          <p className="text-xs text-slate-300">{specialty}</p>
+                          <p className="text-xs text-sky-50">{specialty}</p>
                         </div>
                       </div>
                     ))}
@@ -329,19 +323,19 @@ const SubscriptionPage = (): JSX.Element => {
 
       <section id="preco" className="px-4 py-12 md:px-8 lg:px-10">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr]">
-          <div className="rounded-md bg-slate-950 p-6 text-white shadow-xl shadow-slate-950/15 md:p-8">
-            <p className="text-sm font-semibold text-sky-200">Plano mensal</p>
+          <div className="rounded-md border border-sky-200 bg-gradient-to-br from-white to-sky-50 p-6 text-slate-950 shadow-xl shadow-sky-950/10 md:p-8">
+            <p className="text-sm font-semibold text-sky-700">Plano mensal</p>
             <div className="mt-4 flex items-end gap-2">
               <span className="text-5xl font-bold md:text-6xl">{formatMoney(9990)}</span>
-              <span className="pb-2 text-lg text-slate-300">/mês</span>
+              <span className="pb-2 text-lg text-slate-500">/mês</span>
             </div>
-            <p className="mt-5 text-sm leading-6 text-slate-300">
+            <p className="mt-5 text-sm leading-6 text-slate-600">
               Experimente a plataforma, organize sua clínica e continue com tudo pronto quando assinar.
             </p>
-            <div className="mt-6 grid gap-3 text-sm text-slate-100">
-              {["Agenda, pacientes e equipe", "Relatórios e financeiro", "WhatsApp e comprovantes", "Suporte para acompanhar a operação"].map((item) => (
+            <div className="mt-6 grid gap-3 text-sm text-slate-700">
+              {["Agenda, pacientes e equipe", "Relatórios e financeiro", "Comprovantes organizados", "Suporte para acompanhar a operação"].map((item) => (
                 <div key={item} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-sky-300" />
+                  <Check className="h-4 w-4 text-sky-600" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -386,7 +380,7 @@ const SubscriptionPage = (): JSX.Element => {
       </section>
 
       {checkoutOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" onMouseDown={() => setCheckoutOpen(false)} role="presentation">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/35 p-4 backdrop-blur-sm" onMouseDown={() => setCheckoutOpen(false)} role="presentation">
           <section
             aria-modal="true"
             role="dialog"
