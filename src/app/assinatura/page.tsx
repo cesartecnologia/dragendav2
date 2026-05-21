@@ -2,10 +2,12 @@
 
 import {
   ArrowRight,
+  Activity,
   BarChart3,
   CalendarDays,
   Check,
   CheckCircle2,
+  ClipboardList,
   CreditCard,
   FileText,
   HeartPulse,
@@ -17,6 +19,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { AppLogo } from "../../components/layout/AppLogo";
 import { useUiStore } from "../../lib/stores/uiStore";
@@ -84,6 +87,12 @@ const benefits: Benefit[] = [
     description: "Experimente a plataforma antes de escolher a melhor forma de pagamento.",
     icon: ShieldCheck,
   },
+];
+
+const dashboardStats: Array<{ value: string; label: string; icon: LucideIcon }> = [
+  { value: "18", label: "atendimentos", icon: CalendarDays },
+  { value: "4", label: "salas ativas", icon: Activity },
+  { value: "92%", label: "confirmados", icon: CheckCircle2 },
 ];
 
 const formatDigits = (value: string): string => value.replace(/\D/g, "");
@@ -224,14 +233,21 @@ const SubscriptionPage = (): JSX.Element => {
                 Agenda, pacientes, médicos, financeiro e relatórios em uma plataforma simples para a rotina da clínica.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/register"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-sky-700 px-6 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-800"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Começar teste grátis
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
                 <button
                   type="button"
                   onClick={() => openCheckout("CREDIT_CARD")}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-sky-700 px-6 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-800"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-sky-200 bg-white px-6 text-sm font-bold text-sky-900 shadow-sm transition hover:border-sky-400"
                 >
                   <CreditCard className="h-4 w-4" />
                   Assinar com cartão
-                  <ArrowRight className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
@@ -255,38 +271,79 @@ const SubscriptionPage = (): JSX.Element => {
             <div className="relative">
               <div className="absolute -inset-5 rounded-[32px] bg-sky-300/20 blur-3xl" />
               <div className="relative rounded-md border border-white bg-white p-4 shadow-2xl shadow-sky-950/10">
-                <div className="rounded-md border border-sky-200 bg-gradient-to-br from-sky-600 to-sky-400 p-4 text-white">
-                  <div className="flex items-center justify-between">
+                <div className="rounded-md border border-sky-100 bg-sky-50/80 p-3">
+                  <div className="flex items-center justify-between rounded-md border border-sky-100 bg-white px-3 py-2">
                     <div>
-                      <p className="text-sm text-sky-50">Agenda de hoje</p>
-                      <p className="mt-1 text-2xl font-bold">18 consultas</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Dr. Agenda</p>
+                      <p className="mt-1 text-lg font-bold text-slate-950">Painel da clínica</p>
                     </div>
-                    <HeartPulse className="h-10 w-10 rounded-md bg-white/20 p-2 text-white" />
+                    <HeartPulse className="h-10 w-10 rounded-md bg-sky-100 p-2 text-sky-700" />
                   </div>
-                  <div className="mt-5 grid gap-2">
-                    {[
-                      ["08:30", "Dra. Helena", "Cardiologia"],
-                      ["09:00", "Dr. Marcos", "Dermatologia"],
-                      ["09:00", "Dra. Camila", "Pediatria"],
-                    ].map(([time, doctor, specialty]) => (
-                      <div key={`${time}-${doctor}`} className="grid grid-cols-[56px_1fr] items-center gap-3 rounded-md bg-white/20 p-3">
-                        <span className="rounded-md bg-white px-2 py-1 text-center text-xs font-bold text-sky-800">{time}</span>
-                        <div>
-                          <p className="text-sm font-semibold">{doctor}</p>
-                          <p className="text-xs text-sky-50">{specialty}</p>
-                        </div>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    {dashboardStats.map(({ value, label, icon: Icon }) => (
+                      <div key={label} className="rounded-md border border-sky-100 bg-white p-3">
+                        <Icon className="h-5 w-5 text-sky-600" />
+                        <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
+                        <p className="text-xs font-medium text-slate-500">{label}</p>
                       </div>
                     ))}
                   </div>
-                </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-md border border-sky-100 bg-sky-50 p-4">
-                    <p className="text-sm font-semibold text-sky-900">Confirmados</p>
-                    <p className="mt-2 text-3xl font-bold text-sky-800">92%</p>
-                  </div>
-                  <div className="rounded-md border border-sky-100 bg-sky-50 p-4">
-                    <p className="text-sm font-semibold text-sky-900">Recebimentos</p>
-                    <p className="mt-2 text-3xl font-bold text-sky-800">R$ 8,4k</p>
+
+                  <div className="mt-3 grid gap-3 lg:grid-cols-[1.35fr_0.65fr]">
+                    <div className="rounded-md border border-sky-100 bg-white p-3">
+                      <div className="mb-3 flex items-center justify-between">
+                        <p className="text-sm font-bold text-slate-950">Agenda por horário</p>
+                        <span className="rounded-md bg-sky-50 px-2 py-1 text-xs font-bold text-sky-700">Hoje</span>
+                      </div>
+                      <div className="grid gap-2">
+                        {[
+                          ["08:30", "Dra. Helena", "Cardiologia", "Confirmado"],
+                          ["09:00", "Dr. Marcos", "Dermatologia", "Na recepção"],
+                          ["09:00", "Dra. Camila", "Pediatria", "Confirmado"],
+                          ["09:30", "Dr. Renato", "Ortopedia", "Aguardando"],
+                        ].map(([time, doctor, specialty, status]) => (
+                          <div key={`${time}-${doctor}`} className="grid grid-cols-[54px_1fr] items-center gap-3 rounded-md border border-sky-50 bg-sky-50/70 p-2">
+                            <span className="rounded-md bg-white px-2 py-1 text-center text-xs font-bold text-sky-800 shadow-sm">{time}</span>
+                            <div className="min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="truncate text-sm font-bold text-slate-900">{doctor}</p>
+                                <span className="hidden rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-sky-700 sm:inline">{status}</span>
+                              </div>
+                              <p className="text-xs font-medium text-slate-500">{specialty}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3">
+                      <div className="rounded-md border border-sky-100 bg-white p-3">
+                        <div className="flex items-center gap-2">
+                          <ClipboardList className="h-5 w-5 text-sky-600" />
+                          <p className="text-sm font-bold text-slate-950">Fila</p>
+                        </div>
+                        <div className="mt-3 space-y-2 text-xs font-medium text-slate-600">
+                          <div className="flex justify-between rounded-md bg-sky-50 px-2 py-2">
+                            <span>Triagem</span>
+                            <strong className="text-sky-800">3</strong>
+                          </div>
+                          <div className="flex justify-between rounded-md bg-sky-50 px-2 py-2">
+                            <span>Consulta</span>
+                            <strong className="text-sky-800">7</strong>
+                          </div>
+                          <div className="flex justify-between rounded-md bg-sky-50 px-2 py-2">
+                            <span>Retorno</span>
+                            <strong className="text-sky-800">2</strong>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="rounded-md border border-sky-100 bg-gradient-to-br from-sky-600 to-sky-400 p-3 text-white">
+                        <p className="text-sm font-semibold text-sky-50">Recebimentos</p>
+                        <p className="mt-2 text-3xl font-bold">R$ 8,4k</p>
+                        <p className="mt-1 text-xs text-sky-50">Resumo do mês em tempo real</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -332,6 +389,14 @@ const SubscriptionPage = (): JSX.Element => {
             <p className="mt-5 text-sm leading-6 text-slate-600">
               Experimente a plataforma, organize sua clínica e continue com tudo pronto quando assinar.
             </p>
+            <Link
+              href="/register"
+              className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-sky-700 px-5 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-800"
+            >
+              <Sparkles className="h-4 w-4" />
+              Começar teste grátis
+              <ArrowRight className="h-4 w-4" />
+            </Link>
             <div className="mt-6 grid gap-3 text-sm text-slate-700">
               {["Agenda, pacientes e equipe", "Relatórios e financeiro", "Comprovantes organizados", "Suporte para acompanhar a operação"].map((item) => (
                 <div key={item} className="flex items-center gap-2">
