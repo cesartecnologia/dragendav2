@@ -87,7 +87,7 @@ const benefits: Benefit[] = [
   },
   {
     title: "Acesso protegido",
-    description: "Teste grátis por 7 dias e bloqueio automático sem assinatura válida.",
+    description: "Experimente a plataforma antes de escolher a melhor forma de pagamento.",
     icon: ShieldCheck,
   },
 ];
@@ -113,7 +113,7 @@ const InputField = ({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className="h-10 rounded-md border border-teal-100 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
+      className="h-10 rounded-md border border-sky-100 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
     />
   </label>
 );
@@ -178,7 +178,7 @@ const SubscriptionPage = (): JSX.Element => {
       pushToast({
         type: "success",
         title: "Assinatura criada",
-        description: billingType === "BOLETO" ? "Boleto gerado no Asaas." : "Cartão enviado para processamento.",
+        description: billingType === "BOLETO" ? "Boleto gerado com sucesso." : "Pagamento enviado com sucesso.",
       });
       setPaymentUrl(payload.subscription?.paymentUrl ?? null);
 
@@ -207,24 +207,24 @@ const SubscriptionPage = (): JSX.Element => {
               <span className="hidden text-base font-bold text-slate-950 sm:inline">Dr. Agenda</span>
             </div>
             <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
-              <a href="#beneficios" className="transition hover:text-teal-700">Benefícios</a>
-              <a href="#preco" className="transition hover:text-teal-700">Preço</a>
-              <a href="#checkout" className="transition hover:text-teal-700">Pagamento</a>
+              <a href="#beneficios" className="transition hover:text-sky-700">Benefícios</a>
+              <a href="#preco" className="transition hover:text-sky-700">Preço</a>
+              <a href="#checkout" className="transition hover:text-sky-700">Pagamento</a>
             </nav>
-            <a href="/login" className="rounded-md border border-teal-100 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-teal-300">
+            <a href="/login" className="rounded-md border border-sky-100 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-sky-300">
               Entrar
             </a>
           </header>
 
           <div className="grid min-h-[calc(100vh-110px)] items-center gap-10 py-10 lg:grid-cols-[1fr_0.92fr] lg:py-16">
             <div className="max-w-2xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-md border border-teal-100 bg-white px-3 py-2 text-sm font-semibold text-teal-800 shadow-sm">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-md border border-sky-100 bg-white px-3 py-2 text-sm font-semibold text-sky-800 shadow-sm">
                 <Sparkles className="h-4 w-4" />
-                7 dias grátis, sem perder seus cadastros
+                Experimente agora e continue quando quiser
               </div>
               <h1 className="text-4xl font-bold leading-tight tracking-normal text-slate-950 md:text-6xl">
                 Sua clínica organizada por {formatMoney(9990)}
-                <span className="text-teal-700">/mês</span>
+                <span className="text-sky-700">/mês</span>
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 md:text-lg">
                 Agenda, pacientes, médicos, financeiro, relatórios e WhatsApp em uma plataforma simples para a rotina da clínica.
@@ -233,7 +233,7 @@ const SubscriptionPage = (): JSX.Element => {
                 <button
                   type="button"
                   onClick={() => openCheckout("CREDIT_CARD")}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-teal-700 px-6 text-sm font-bold text-white shadow-lg shadow-teal-900/15 transition hover:bg-teal-800"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-sky-700 px-6 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-800"
                 >
                   <CreditCard className="h-4 w-4" />
                   Assinar com cartão
@@ -242,16 +242,16 @@ const SubscriptionPage = (): JSX.Element => {
                 <button
                   type="button"
                   onClick={() => openCheckout("BOLETO")}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-teal-200 bg-white px-6 text-sm font-bold text-teal-900 shadow-sm transition hover:border-teal-400"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-sky-200 bg-white px-6 text-sm font-bold text-sky-900 shadow-sm transition hover:border-sky-400"
                 >
                   <FileText className="h-4 w-4" />
                   Gerar boleto
                 </button>
               </div>
               <div className="mt-7 grid gap-3 text-sm text-slate-700 sm:grid-cols-3">
-                {["Sem limite de cadastros", "Checkout via Asaas", "Acesso bloqueado sem assinatura"].map((item) => (
+                {["Cadastros ilimitados", "Pagamento simples e seguro", "Sua clínica sempre organizada"].map((item) => (
                   <div key={item} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-600" />
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-sky-600" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -259,15 +259,15 @@ const SubscriptionPage = (): JSX.Element => {
             </div>
 
             <div className="relative">
-              <div className="absolute -inset-5 rounded-[32px] bg-teal-300/20 blur-3xl" />
-              <div className="relative rounded-md border border-white bg-white p-4 shadow-2xl shadow-teal-950/10">
-                <div className="rounded-md border border-teal-100 bg-slate-950 p-4 text-white">
+              <div className="absolute -inset-5 rounded-[32px] bg-sky-300/20 blur-3xl" />
+              <div className="relative rounded-md border border-white bg-white p-4 shadow-2xl shadow-sky-950/10">
+                <div className="rounded-md border border-sky-100 bg-slate-950 p-4 text-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-teal-100">Agenda de hoje</p>
+                      <p className="text-sm text-sky-100">Agenda de hoje</p>
                       <p className="mt-1 text-2xl font-bold">18 consultas</p>
                     </div>
-                    <HeartPulse className="h-10 w-10 rounded-md bg-teal-500/20 p-2 text-teal-200" />
+                    <HeartPulse className="h-10 w-10 rounded-md bg-sky-500/20 p-2 text-sky-200" />
                   </div>
                   <div className="mt-5 grid gap-2">
                     {[
@@ -276,7 +276,7 @@ const SubscriptionPage = (): JSX.Element => {
                       ["09:00", "Dra. Camila", "Pediatria"],
                     ].map(([time, doctor, specialty]) => (
                       <div key={`${time}-${doctor}`} className="grid grid-cols-[56px_1fr] items-center gap-3 rounded-md bg-white/10 p-3">
-                        <span className="rounded-md bg-teal-300 px-2 py-1 text-center text-xs font-bold text-slate-950">{time}</span>
+                        <span className="rounded-md bg-sky-300 px-2 py-1 text-center text-xs font-bold text-slate-950">{time}</span>
                         <div>
                           <p className="text-sm font-semibold">{doctor}</p>
                           <p className="text-xs text-slate-300">{specialty}</p>
@@ -286,9 +286,9 @@ const SubscriptionPage = (): JSX.Element => {
                   </div>
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-md border border-teal-100 bg-teal-50 p-4">
-                    <p className="text-sm font-semibold text-teal-900">Confirmados</p>
-                    <p className="mt-2 text-3xl font-bold text-teal-800">92%</p>
+                  <div className="rounded-md border border-sky-100 bg-sky-50 p-4">
+                    <p className="text-sm font-semibold text-sky-900">Confirmados</p>
+                    <p className="mt-2 text-3xl font-bold text-sky-800">92%</p>
                   </div>
                   <div className="rounded-md border border-sky-100 bg-sky-50 p-4">
                     <p className="text-sm font-semibold text-sky-900">Recebimentos</p>
@@ -314,8 +314,8 @@ const SubscriptionPage = (): JSX.Element => {
               const Icon = benefit.icon;
 
               return (
-                <article key={benefit.title} className="rounded-md border border-teal-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-teal-950/5">
-                  <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-md bg-teal-50 text-teal-700">
+                <article key={benefit.title} className="rounded-md border border-sky-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-950/5">
+                  <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-md bg-sky-50 text-sky-700">
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-950">{benefit.title}</h3>
@@ -330,18 +330,18 @@ const SubscriptionPage = (): JSX.Element => {
       <section id="preco" className="px-4 py-12 md:px-8 lg:px-10">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr]">
           <div className="rounded-md bg-slate-950 p-6 text-white shadow-xl shadow-slate-950/15 md:p-8">
-            <p className="text-sm font-semibold text-teal-200">Plano mensal</p>
+            <p className="text-sm font-semibold text-sky-200">Plano mensal</p>
             <div className="mt-4 flex items-end gap-2">
               <span className="text-5xl font-bold md:text-6xl">{formatMoney(9990)}</span>
               <span className="pb-2 text-lg text-slate-300">/mês</span>
             </div>
             <p className="mt-5 text-sm leading-6 text-slate-300">
-              Comece com 7 dias grátis. Depois, mantenha todos os cadastros e continue usando a clínica completa.
+              Experimente a plataforma, organize sua clínica e continue com tudo pronto quando assinar.
             </p>
             <div className="mt-6 grid gap-3 text-sm text-slate-100">
               {["Agenda, pacientes e equipe", "Relatórios e financeiro", "WhatsApp e comprovantes", "Suporte para acompanhar a operação"].map((item) => (
                 <div key={item} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-teal-300" />
+                  <Check className="h-4 w-4 text-sky-300" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -349,17 +349,17 @@ const SubscriptionPage = (): JSX.Element => {
           </div>
 
           <div id="checkout" className="grid gap-4 md:grid-cols-2">
-            <article className="flex flex-col rounded-md border border-teal-200 bg-white p-6 shadow-sm">
-              <div className="mb-5 h-1 rounded-full bg-teal-700" />
-              <CreditCard className="h-10 w-10 rounded-md bg-teal-50 p-2 text-teal-700" />
+            <article className="flex flex-col rounded-md border border-sky-200 bg-white p-6 shadow-sm">
+              <div className="mb-5 h-1 rounded-full bg-sky-700" />
+              <CreditCard className="h-10 w-10 rounded-md bg-sky-50 p-2 text-sky-700" />
               <h3 className="mt-5 text-2xl font-bold text-slate-950">Cartão de crédito</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Pagamento online com recorrência mensal. O acesso continua automaticamente após o processamento.
+                Pagamento online mensal. O acesso continua automaticamente após a confirmação.
               </p>
               <button
                 type="button"
                 onClick={() => openCheckout("CREDIT_CARD")}
-                className="mt-auto inline-flex h-12 items-center justify-center gap-2 rounded-md bg-teal-700 px-5 text-sm font-bold text-white transition hover:bg-teal-800"
+                className="mt-auto inline-flex h-12 items-center justify-center gap-2 rounded-md bg-sky-700 px-5 text-sm font-bold text-white transition hover:bg-sky-800"
               >
                 Assinar com cartão
                 <ArrowRight className="h-4 w-4" />
@@ -370,7 +370,7 @@ const SubscriptionPage = (): JSX.Element => {
               <FileText className="h-10 w-10 rounded-md bg-sky-50 p-2 text-sky-700" />
               <h3 className="mt-5 text-2xl font-bold text-slate-950">Boleto bancário</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Gere o boleto pelo Asaas. Após a confirmação do pagamento, a assinatura fica válida.
+                Gere o boleto e pague com tranquilidade. Após a confirmação, a assinatura fica ativa.
               </p>
               <button
                 type="button"
@@ -393,15 +393,15 @@ const SubscriptionPage = (): JSX.Element => {
             className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-md bg-white shadow-2xl shadow-slate-950/30"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <div className="sticky top-0 z-10 flex items-start justify-between border-b border-teal-100 bg-white px-5 py-4">
+            <div className="sticky top-0 z-10 flex items-start justify-between border-b border-sky-100 bg-white px-5 py-4">
               <div>
-                <p className="text-sm font-semibold text-teal-700">{billingType === "BOLETO" ? "Boleto Asaas" : "Cartão de crédito"}</p>
+                <p className="text-sm font-semibold text-sky-700">{billingType === "BOLETO" ? "Boleto bancário" : "Cartão de crédito"}</p>
                 <h2 className="mt-1 text-2xl font-bold text-slate-950">
                   {billingType === "BOLETO" ? "Gerar boleto da assinatura" : "Assinar o Dr. Agenda"}
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">Plano mensal de {formatMoney(9990)} com 7 dias grátis.</p>
+                <p className="mt-1 text-sm text-slate-500">Plano mensal de {formatMoney(9990)} para manter sua clínica completa.</p>
               </div>
-              <button type="button" onClick={() => setCheckoutOpen(false)} className="rounded-md border border-teal-100 p-2 text-slate-500 transition hover:text-slate-900" aria-label="Fechar">
+              <button type="button" onClick={() => setCheckoutOpen(false)} className="rounded-md border border-sky-100 p-2 text-slate-500 transition hover:text-slate-900" aria-label="Fechar">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -417,7 +417,7 @@ const SubscriptionPage = (): JSX.Element => {
               </div>
 
               {billingType === "CREDIT_CARD" ? (
-                <div className="grid gap-3 rounded-md border border-teal-100 bg-teal-50/60 p-4 md:grid-cols-3">
+                <div className="grid gap-3 rounded-md border border-sky-100 bg-sky-50/60 p-4 md:grid-cols-3">
                   <InputField label="Nome no cartão" value={form.holderName} onChange={(value) => update("holderName", value)} />
                   <InputField className="md:col-span-2" label="Número do cartão" value={form.number} onChange={(value) => update("number", value)} />
                   <InputField label="Mês" value={form.expiryMonth} onChange={(value) => update("expiryMonth", value)} placeholder="MM" />
@@ -426,16 +426,16 @@ const SubscriptionPage = (): JSX.Element => {
                 </div>
               ) : (
                 <div className="rounded-md border border-sky-100 bg-sky-50 p-4 text-sm leading-6 text-sky-900">
-                  O boleto será gerado pelo Asaas. O sistema permanece disponível durante o teste grátis e a assinatura fica ativa após confirmação.
+                  O boleto será gerado com segurança. Após a confirmação do pagamento, sua assinatura fica ativa.
                 </div>
               )}
 
-              <div className="sticky bottom-0 -mx-4 -mb-4 flex flex-col gap-3 border-t border-teal-100 bg-white px-4 py-4 sm:flex-row sm:items-center">
+              <div className="sticky bottom-0 -mx-4 -mb-4 flex flex-col gap-3 border-t border-sky-100 bg-white px-4 py-4 sm:flex-row sm:items-center">
                 <button
                   type="button"
                   onClick={submit}
                   disabled={loading}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-teal-700 px-5 text-sm font-bold text-white transition hover:bg-teal-800 disabled:opacity-60"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-sky-700 px-5 text-sm font-bold text-white transition hover:bg-sky-800 disabled:opacity-60"
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   {billingType === "BOLETO" ? "Gerar boleto" : "Pagar com cartão"}
@@ -445,7 +445,7 @@ const SubscriptionPage = (): JSX.Element => {
                   type="button"
                   onClick={() => setCheckoutOpen(false)}
                   disabled={loading}
-                  className="inline-flex h-12 items-center justify-center rounded-md border border-teal-100 px-5 text-sm font-semibold text-slate-700 transition hover:border-teal-300"
+                  className="inline-flex h-12 items-center justify-center rounded-md border border-sky-100 px-5 text-sm font-semibold text-slate-700 transition hover:border-sky-300"
                 >
                   Cancelar
                 </button>
