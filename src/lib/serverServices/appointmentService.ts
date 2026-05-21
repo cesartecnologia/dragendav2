@@ -25,7 +25,8 @@ export type TodayAppointmentsListener = {
   unsubscribe: Unsubscribe;
 };
 
-const dateFromRange = (date: Date): string => date.toISOString().slice(0, 10);
+const dateFromRange = (date: Date | string): string =>
+  typeof date === "string" ? date.slice(0, 10) : date.toISOString().slice(0, 10);
 
 const appointmentConditions = (
   clinicId: string,

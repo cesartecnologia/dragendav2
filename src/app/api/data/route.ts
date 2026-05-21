@@ -95,9 +95,12 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     const result = await action(...(body.args as never[]));
     return NextResponse.json({ result });
   } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Erro ao processar dados";
+    const status = message === "Sessão inválida" ? 401 : 500;
+
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Erro ao processar dados" },
-      { status: 500 },
+      { message },
+      { status },
     );
   }
 };
