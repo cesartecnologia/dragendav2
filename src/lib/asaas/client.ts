@@ -85,7 +85,7 @@ export type AsaasCheckoutInput = {
     quantity: number;
     value: number;
   }>;
-  customerData: {
+  customerData?: {
     name: string;
     email: string;
     cpfCnpj: string;
@@ -117,7 +117,19 @@ const getRequiredEnv = (key: string, value: string | undefined): string => {
 };
 
 const getAsaasBaseUrl = (): string => {
-  return process.env.ASAAS_API_URL?.replace(/\/$/, "") ?? "https://sandbox.asaas.com/api/v3";
+  const configuredUrl =
+    process.env.ASAAS_API_URL?.replace(/\/$/, "") ??
+    "https://api-sandbox.asaas.com/v3";
+
+  if (configuredUrl === "https://sandbox.asaas.com/api/v3") {
+    return "https://api-sandbox.asaas.com/v3";
+  }
+
+  if (configuredUrl === "https://www.asaas.com/api/v3") {
+    return "https://api.asaas.com/v3";
+  }
+
+  return configuredUrl;
 };
 
 const getAsaasWebBaseUrl = (): string => {

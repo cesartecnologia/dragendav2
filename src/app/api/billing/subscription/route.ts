@@ -44,7 +44,7 @@ export const GET = async (request: NextRequest): Promise<NextResponse> => {
 };
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
-  const user = await getSessionUser(request);
+  const user = await getSessionUser(request).catch(() => null);
 
   if (user === null || user.role !== "OWNER") {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
@@ -59,12 +59,24 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     );
   }
 
-  const subscription = await createClinicHostedCheckout({
-    clinicId: user.clinicId,
-    plan: parsed.data.plan,
-    amount: parsed.data.amount,
-    callbackBaseUrl: request.nextUrl.origin,
-  });
+  try {
+    const subscription = await createClinicHostedCheckout({
+      clinicId: user.clinicId,
+      plan: parsed.data.plan,
+      amount: parsed.data.amount,
+      callbackBaseUrl: request.nextUrl.origin,
+    });
 
-  return NextResponse.json({ subscription });
+    return NextResponse.json({ subscription });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível iniciar o checkout",
+      },
+      { status: 400 },
+    );
+  }
 };

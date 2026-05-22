@@ -243,6 +243,18 @@ const getProviderEventId = (payload: AsaasWebhookPayload): string => {
   return payload.id ?? `${payload.event}:${payload.payment?.id ?? payload.subscription?.id ?? payload.checkout?.id ?? Date.now().toString()}`;
 };
 
+const getAsaasCallbackBaseUrl = (requestBaseUrl: string): string => {
+  const configuredUrl =
+    process.env.ASAAS_CHECKOUT_CALLBACK_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? requestBaseUrl;
+  const normalizedUrl = configuredUrl.replace(/\/$/, "");
+
+  if (normalizedUrl.startsWith("http://localhost") || normalizedUrl.startsWith("http://127.0.0.1")) {
+    return "https://dragenda.cesartecnologia.com";
+  }
+
+  return normalizedUrl;
+};
+
 export const processAsaasWebhook = async (
   payload: AsaasWebhookPayload,
 ): Promise<void> => {
@@ -450,16 +462,10 @@ export const createClinicHostedCheckout = async (
     return existing;
   }
 
-  const normalizedBaseUrl = input.callbackBaseUrl.replace(/\/$/, "");
+  const normalizedBaseUrl = getAsaasCallbackBaseUrl(input.callbackBaseUrl);
   const nextDueDate = new Date().toISOString().slice(0, 10);
-  const customer = await createAsaasCustomer({
-    name: clinic.name,
-    email: clinic.email,
-    cpfCnpj: clinic.cnpj,
-    phone: clinic.phone,
-  });
   const checkout = await createAsaasCheckout({
-    billingTypes: [ASAAS_BILLING_TYPE.CREDIT_CARD, ASAAS_BILLING_TYPE.BOLETO],
+    billingTypes: [ASAAS_BILLING_TYPE.CREDIT_CARD],
     chargeTypes: [ASAAS_CHARGE_TYPE.RECURRENT],
     minutesToExpire: 1440,
     externalReference: input.clinicId,
@@ -476,12 +482,6 @@ export const createClinicHostedCheckout = async (
         value: input.amount / 100,
       },
     ],
-    customerData: {
-      name: clinic.name,
-      email: clinic.email,
-      cpfCnpj: clinic.cnpj,
-      phone: clinic.phone,
-    },
     subscription: {
       cycle: ASAAS_CYCLE.MONTHLY,
       nextDueDate,
@@ -493,7 +493,7 @@ export const createClinicHostedCheckout = async (
       .values({
         clinicId: input.clinicId,
         provider: "asaas",
-        providerCustomerId: customer.id,
+        providerCustomerId: existing?.providerCustomerId ?? "",
         providerSubscriptionId: checkout.id,
         status: "trialing",
         plan: input.plan,
@@ -504,7 +504,7 @@ export const createClinicHostedCheckout = async (
       .onConflictDoUpdate({
         target: subscriptions.clinicId,
         set: {
-          providerCustomerId: customer.id,
+          providerCustomerId: existing?.providerCustomerId ?? "",
           providerSubscriptionId: checkout.id,
           status: existing?.status ?? "trialing",
           plan: input.plan,

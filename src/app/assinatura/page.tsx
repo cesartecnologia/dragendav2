@@ -3,8 +3,6 @@
 import {
   ArrowRight,
   CheckCircle2,
-  CreditCard,
-  FileText,
   Loader2,
   ShieldCheck,
   Sparkles,
@@ -40,6 +38,11 @@ const SubscriptionPage = (): JSX.Element => {
         message?: string;
         subscription?: { paymentUrl?: string | null };
       };
+
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(payload.message ?? "Não foi possível iniciar a assinatura");
@@ -107,15 +110,6 @@ const SubscriptionPage = (): JSX.Element => {
                   Começar teste grátis
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-                <button
-                  type="button"
-                  onClick={startAsaasCheckout}
-                  disabled={loading}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-white px-6 text-sm font-bold text-sky-800 transition hover:border-sky-300 hover:bg-sky-50 disabled:opacity-60"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                  Assinar pelo Asaas
-                </button>
               </div>
             </div>
           </div>
@@ -130,69 +124,32 @@ const SubscriptionPage = (): JSX.Element => {
               ))}
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <article className="flex h-full flex-col rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:p-6">
-                <div className="h-1 w-full rounded-full bg-sky-500" />
-                <div className="mt-5 flex flex-1 flex-col">
-                  <div className="flex min-h-[104px] items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
-                      <CreditCard className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <h2 className="text-lg font-semibold tracking-tight text-slate-950">Cartão de crédito</h2>
-                      <p className="text-sm leading-6 text-slate-600">Pagamento no ambiente oficial do Asaas.</p>
-                    </div>
+            <div className="rounded-[28px] border border-sky-100 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:p-6">
+              <div className="h-1 w-full rounded-full bg-sky-500" />
+              <div className="mt-5 grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
+                    <ShieldCheck className="h-5 w-5" />
                   </div>
-
-                  <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                    Ao clicar, você escolhe a forma de pagamento e conclui a assinatura com segurança.
-                  </div>
-
-                  <div className="mt-6 flex flex-1 items-end">
-                    <button
-                      type="button"
-                      onClick={startAsaasCheckout}
-                      disabled={loading}
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 px-5 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:opacity-60"
-                    >
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                      Abrir checkout
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
+                  <div className="space-y-1.5">
+                    <h2 className="text-lg font-semibold tracking-tight text-slate-950">Checkout seguro Asaas</h2>
+                    <p className="text-sm leading-6 text-slate-600">
+                      O cliente conclui a assinatura diretamente no ambiente oficial do Asaas.
+                    </p>
                   </div>
                 </div>
-              </article>
 
-              <article className="flex h-full flex-col rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:p-6">
-                <div className="h-1 w-full rounded-full bg-sky-300" />
-                <div className="mt-5 flex flex-1 flex-col">
-                  <div className="flex min-h-[104px] items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <h2 className="text-lg font-semibold tracking-tight text-slate-950">Boleto bancário</h2>
-                      <p className="text-sm leading-6 text-slate-600">Emissão direta pelo checkout do Asaas.</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                    O boleto é gerado no Asaas e a assinatura é liberada após a confirmação.
-                  </div>
-
-                  <div className="mt-6 flex flex-1 items-end">
-                    <button
-                      type="button"
-                      onClick={startAsaasCheckout}
-                      disabled={loading}
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-white px-5 text-sm font-semibold text-sky-800 transition hover:bg-sky-50 disabled:opacity-60"
-                    >
-                      Abrir checkout
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </article>
+                <button
+                  type="button"
+                  onClick={startAsaasCheckout}
+                  disabled={loading}
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 px-6 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-700 disabled:opacity-60 md:w-auto"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Assinar pelo Asaas
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </section>

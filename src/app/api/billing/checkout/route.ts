@@ -5,18 +5,30 @@ import { createClinicHostedCheckout } from "../../../../lib/services/subscriptio
 export const runtime = "nodejs";
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
-  const user = await getSessionUserFromRequest(request);
+  const user = await getSessionUserFromRequest(request).catch(() => null);
 
   if (user === null || !user.active) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
-  const subscription = await createClinicHostedCheckout({
-    clinicId: user.clinicId,
-    plan: "starter",
-    amount: 9990,
-    callbackBaseUrl: request.nextUrl.origin,
-  });
+  try {
+    const subscription = await createClinicHostedCheckout({
+      clinicId: user.clinicId,
+      plan: "starter",
+      amount: 9990,
+      callbackBaseUrl: request.nextUrl.origin,
+    });
 
-  return NextResponse.json({ subscription });
+    return NextResponse.json({ subscription });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível iniciar o checkout",
+      },
+      { status: 400 },
+    );
+  }
 };
