@@ -16,6 +16,15 @@ export type BootstrapClinicPayload = {
   phone: string;
   city: string;
   state: string;
+  checkoutSessionId?: string;
+};
+
+export type BootstrapMasterPayload = {
+  clinicId: string;
+  ownerName: string;
+  ownerEmail: string;
+  clinicName: string;
+  accessCode?: string;
 };
 
 export type SyncFirebaseUserPayload = {
@@ -70,6 +79,22 @@ export const bootstrapPostgresClinic = async (
   const response = await requestWithFirebaseToken<AuthMeResponse>(
     firebaseUser,
     "/api/auth/bootstrap",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return response.user as User;
+};
+
+export const bootstrapMasterAccess = async (
+  firebaseUser: FirebaseUser,
+  payload: BootstrapMasterPayload,
+): Promise<User> => {
+  const response = await requestWithFirebaseToken<AuthMeResponse>(
+    firebaseUser,
+    "/api/master/bootstrap",
     {
       method: "POST",
       body: JSON.stringify(payload),

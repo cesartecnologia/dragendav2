@@ -69,6 +69,43 @@ export type AsaasSubscriptionResponse = {
   bankSlipUrl?: string;
 };
 
+export type AsaasPaymentLinkInput = {
+  billingType: "BOLETO" | "CREDIT_CARD" | "PIX" | "UNDEFINED";
+  chargeType: "DETACHED" | "RECURRENT" | "INSTALLMENT";
+  name: string;
+  description: string;
+  value: number;
+  externalReference?: string;
+  dueDateLimitDays?: number;
+  notificationEnabled?: boolean;
+  callback: {
+    successUrl: string;
+    autoRedirect: boolean;
+  };
+  isAddressRequired?: boolean;
+};
+
+export type AsaasPaymentLinkResponse = {
+  id: string;
+  url: string;
+};
+
+export type AsaasPaymentResponse = {
+  id: string;
+  status?: string;
+  customer?: string;
+  subscription?: string;
+  checkoutSession?: string;
+  paymentLink?: string;
+  externalReference?: string;
+  billingType?: string;
+  value?: number;
+  dueDate?: string;
+  dateCreated?: string;
+  invoiceUrl?: string;
+  bankSlipUrl?: string;
+};
+
 export type AsaasCheckoutInput = {
   billingTypes: AsaasBillingType[];
   chargeTypes: AsaasChargeType[];
@@ -204,6 +241,40 @@ export const createAsaasCheckout = async (
     method: "POST",
     body: JSON.stringify(input),
   });
+};
+
+export const createAsaasPaymentLink = async (
+  input: AsaasPaymentLinkInput,
+): Promise<AsaasPaymentLinkResponse> => {
+  return await asaasFetch<AsaasPaymentLinkResponse>("/paymentLinks", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+};
+
+export const listAsaasPayments = async (params: {
+  checkoutSession?: string | null;
+  externalReference?: string | null;
+  limit?: number;
+} = {}): Promise<AsaasPaymentResponse[]> => {
+  const searchParams = new URLSearchParams();
+
+  if (params.checkoutSession !== undefined && params.checkoutSession !== null) {
+    searchParams.set("checkoutSession", params.checkoutSession);
+  }
+
+  if (params.externalReference !== undefined && params.externalReference !== null) {
+    searchParams.set("externalReference", params.externalReference);
+  }
+
+  searchParams.set("limit", (params.limit ?? 10).toString());
+  const suffix = searchParams.toString();
+  const response = await asaasFetch<{ data?: AsaasPaymentResponse[] }>(
+    `/payments${suffix.length > 0 ? `?${suffix}` : ""}`,
+    { method: "GET" },
+  );
+
+  return response.data ?? [];
 };
 
 export const getAsaasCheckoutUrl = (checkout: AsaasCheckoutResponse): string => {

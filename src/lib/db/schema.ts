@@ -72,6 +72,23 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "blocked",
 ]);
 export const billingProviderEnum = pgEnum("billing_provider", ["asaas", "stripe"]);
+export const checkoutPaymentMethodEnum = pgEnum("checkout_payment_method", [
+  "credit_card",
+  "boleto",
+]);
+export const checkoutSessionStatusEnum = pgEnum("checkout_session_status", [
+  "initiated",
+  "waiting_payment",
+  "paid",
+  "expired",
+  "cancelled",
+]);
+export const onboardingStatusEnum = pgEnum("onboarding_status", [
+  "locked",
+  "released",
+  "processing",
+  "completed",
+]);
 
 export const clinics = pgTable("clinics", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -334,6 +351,69 @@ export const billingEvents = pgTable("billing_events", {
 }, (table) => ({
   providerEventIdx: uniqueIndex("billing_events_provider_event_idx").on(table.provider, table.providerEventId),
   clinicProcessedIdx: index("billing_events_clinic_processed_idx").on(table.clinicId, table.processedAt),
+}));
+
+export const checkoutSessions = pgTable("checkout_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  planId: varchar("plan_id", { length: 80 }).notNull().default("starter"),
+  planName: varchar("plan_name", { length: 120 }).notNull().default("Plano Premium"),
+  value: integer("value").notNull().default(9990),
+  paymentMethod: checkoutPaymentMethodEnum("payment_method").notNull(),
+  status: checkoutSessionStatusEnum("status").notNull().default("initiated"),
+  asaasCheckoutId: varchar("asaas_checkout_id", { length: 120 }),
+  asaasPaymentLinkId: varchar("asaas_payment_link_id", { length: 120 }),
+  asaasCustomerId: varchar("asaas_customer_id", { length: 120 }),
+  asaasSubscriptionId: varchar("asaas_subscription_id", { length: 120 }),
+  paymentId: varchar("payment_id", { length: 120 }),
+  paymentStatus: varchar("payment_status", { length: 80 }),
+  checkoutUrl: text("checkout_url"),
+  invoiceUrl: text("invoice_url"),
+  payerName: varchar("payer_name", { length: 180 }),
+  payerEmail: varchar("payer_email", { length: 180 }),
+  payerPhone: varchar("payer_phone", { length: 30 }),
+  payerCpfCnpj: varchar("payer_cpf_cnpj", { length: 20 }),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  asaasCheckoutIdx: uniqueIndex("checkout_sessions_asaas_checkout_idx").on(table.asaasCheckoutId),
+  asaasPaymentLinkIdx: uniqueIndex("checkout_sessions_asaas_payment_link_idx").on(table.asaasPaymentLinkId),
+  asaasSubscriptionIdx: index("checkout_sessions_asaas_subscription_idx").on(table.asaasSubscriptionId),
+  paymentIdx: index("checkout_sessions_payment_idx").on(table.paymentId),
+  statusIdx: index("checkout_sessions_status_idx").on(table.status),
+}));
+
+export const checkoutOnboarding = pgTable("checkout_onboarding", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull().references(() => checkoutSessions.id, { onDelete: "cascade" }),
+  status: onboardingStatusEnum("status").notNull().default("locked"),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  clinicId: uuid("clinic_id").references(() => clinics.id, { onDelete: "set null" }),
+  releasedAt: timestamp("released_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  sessionIdx: uniqueIndex("checkout_onboarding_session_idx").on(table.sessionId),
+  statusIdx: index("checkout_onboarding_status_idx").on(table.status),
+}));
+
+export const checkoutPayments = pgTable("checkout_payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").references(() => checkoutSessions.id, { onDelete: "set null" }),
+  asaasPaymentId: varchar("asaas_payment_id", { length: 120 }).notNull(),
+  status: varchar("status", { length: 80 }),
+  method: checkoutPaymentMethodEnum("method"),
+  value: integer("value"),
+  invoiceUrl: text("invoice_url"),
+  asaasCustomerId: varchar("asaas_customer_id", { length: 120 }),
+  asaasSubscriptionId: varchar("asaas_subscription_id", { length: 120 }),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  paymentIdx: uniqueIndex("checkout_payments_asaas_payment_idx").on(table.asaasPaymentId),
+  sessionIdx: index("checkout_payments_session_idx").on(table.sessionId),
 }));
 
 export const whatsappTemplates = pgTable("whatsapp_templates", {

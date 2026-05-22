@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChartNoAxesCombined,
   Building2,
+  CreditCard,
   FlaskConical,
   LayoutDashboard,
   Stethoscope,
@@ -28,6 +29,7 @@ const items = [
   { href: "/reports", label: "Relatórios", icon: ChartNoAxesCombined },
   { href: "/users", label: "Funcionários", icon: UserCircle },
   { href: "/settings/company", label: "Clínica", icon: Building2 },
+  { href: "/subscription", label: "Assinatura", icon: CreditCard },
 ];
 
 export const Sidebar = (): JSX.Element => {

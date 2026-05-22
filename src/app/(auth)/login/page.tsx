@@ -1,7 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, CalendarDays, CheckCircle2, HeartPulse, Loader2, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarRange,
+  KeyRound,
+  Loader2,
+  LogIn,
+  Mail,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -11,11 +20,29 @@ import { getAuthErrorMessage, loginWithEmail } from "../../../lib/firebase/auth"
 import { useAuthStore } from "../../../lib/stores/authStore";
 
 const schema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(1, "Informe a senha"),
+  email: z.string().trim().min(1, "E-mail é obrigatório").email("E-mail inválido"),
+  password: z.string().trim().min(1, "Informe a senha"),
 });
 
 type LoginFormValues = z.infer<typeof schema>;
+
+const highlights = [
+  {
+    icon: CalendarRange,
+    title: "Agenda mais organizada",
+    description: "Controle horários, encaixes e atendimentos com mais clareza.",
+  },
+  {
+    icon: UsersRound,
+    title: "Equipe integrada",
+    description: "Profissionais conectados em uma rotina simples e profissional.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Acesso seguro",
+    description: "Permissões definidas para cada função da clínica.",
+  },
+] as const;
 
 const LoginPage = (): JSX.Element => {
   const router = useRouter();
@@ -47,140 +74,132 @@ const LoginPage = (): JSX.Element => {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5fbff] px-4 py-4 text-slate-950 sm:px-6 sm:py-6">
-      <div className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-6xl flex-col gap-5">
-        <header className="flex items-center justify-between rounded-[28px] border border-white/70 bg-white/95 px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6">
+    <main className="min-h-screen bg-[#f5f5f5] px-3 py-4 text-slate-950 sm:px-5 sm:py-6">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6">
+        <header className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-5">
           <Link href="/" className="flex items-center gap-3">
             <AppLogo className="h-10 w-10" />
             <span className="text-lg font-bold tracking-tight text-slate-950">Dr. Agenda</span>
           </Link>
           <Link
             href="/assinatura"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            Assinatura
+            <LogIn className="h-4 w-4" />
+            Ver plano
           </Link>
         </header>
 
-        <section className="grid flex-1 items-center gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="hidden lg:block">
-            <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.06)]">
-              <div className="rounded-[26px] border border-sky-100 bg-sky-50/80 p-5">
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white px-3 py-1 text-xs font-semibold text-sky-800">
-                  <HeartPulse className="h-3.5 w-3.5" />
-                  Rotina da clínica
-                </div>
-                <h1 className="mt-5 max-w-lg text-5xl font-bold leading-tight tracking-tight text-slate-950">
-                  Acesse sua clínica com tudo no lugar.
-                </h1>
-                <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
-                  Agenda, pacientes, médicos e financeiro em uma experiência simples para a equipe inteira trabalhar melhor.
-                </p>
+        <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch">
+          <section className="flex h-full min-h-[540px] flex-col rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.06)] sm:p-6">
+            <div className="space-y-2 text-center">
+              <h1 className="mx-auto max-w-xl text-[2rem] font-bold tracking-[-0.03em] text-slate-950 sm:text-[2.15rem]">
+                Acesse sua conta
+              </h1>
+              <p className="mx-auto max-w-xl text-sm leading-6 text-slate-600 sm:text-[15px]">
+                Entre para acessar o Dr. Agenda com praticidade e segurança.
+              </p>
+            </div>
 
-                <div className="mt-7 grid gap-3">
-                  {[
-                    "Agenda do dia com visão clara",
-                    "Atendimentos organizados por status",
-                    "Dados da clínica sempre à mão",
-                  ].map((item) => (
-                    <div key={item} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
-                      <CheckCircle2 className="h-5 w-5 text-sky-500" />
-                      <span className="text-sm font-medium text-slate-700">{item}</span>
+            <div className="mt-6 grid flex-1 content-center gap-3">
+              {highlights.map(({ icon: Icon, title, description }) => (
+                <div key={title} className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-xl bg-white p-2 text-blue-600 shadow-sm">
+                      <Icon className="h-[18px] w-[18px]" />
                     </div>
-                  ))}
-                </div>
-
-                <div className="mt-7 rounded-[24px] border border-sky-100 bg-white p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-600">Próximos atendimentos</p>
-                      <p className="mt-1 text-3xl font-bold text-slate-950">12 confirmados</p>
+                    <div className="space-y-1">
+                      <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
+                      <p className="text-sm leading-5 text-slate-600">{description}</p>
                     </div>
-                    <CalendarDays className="h-12 w-12 rounded-2xl bg-sky-50 p-3 text-sky-700" />
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          </div>
+          </section>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="mx-auto w-full max-w-md rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] md:p-8"
-          >
-            <div className="mb-8 flex flex-col items-center text-center">
-              <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
-                <LockKeyhole className="h-6 w-6" />
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
-                <Sparkles className="h-3.5 w-3.5" />
-                Área do cliente
-              </div>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">Entrar na clínica</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Use seu email e senha para continuar seus atendimentos.
-              </p>
-            </div>
-
-            <div className="grid gap-4">
-              <label className="grid gap-1.5 text-sm font-medium text-slate-700">
-                Email
-                <input
-                  type="email"
-                  {...register("email")}
-                  className="h-11 rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
-                />
-                {errors.email?.message !== undefined ? (
-                  <span className="text-xs text-clinic-danger">
-                    {errors.email.message}
-                  </span>
-                ) : null}
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-slate-700">
-                Senha
-                <input
-                  type="password"
-                  {...register("password")}
-                  className="h-11 rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
-                />
-                {errors.password?.message !== undefined ? (
-                  <span className="text-xs text-clinic-danger">
-                    {errors.password.message}
-                  </span>
-                ) : null}
-              </label>
-            </div>
-
-            {errors.root?.message !== undefined ? (
-              <p className="mt-4 rounded-2xl bg-clinic-danger/10 p-3 text-sm text-clinic-danger">
-                {errors.root.message}
-              </p>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-700 disabled:opacity-60"
+          <section className="flex h-full items-stretch">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex h-full min-h-[540px] w-full flex-col overflow-hidden rounded-[24px] border border-sky-100 bg-white shadow-[0_24px_80px_rgba(14,165,233,0.10)]"
             >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Entrar
-              <ArrowRight className="h-4 w-4" />
-            </button>
+              <div className="space-y-2 p-6 pb-4">
+                <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-950">
+                  Entrar
+                </h2>
+                <p className="text-sm leading-6 text-slate-600">
+                  Use seu e-mail e senha para entrar na sua conta.
+                </p>
+              </div>
 
-            <div className="mt-5 flex items-center justify-between text-sm">
-              <Link href="/forgot-password" className="font-medium text-sky-700 hover:text-sky-900">
-                Esqueci minha senha
-              </Link>
-              <Link href="/register" className="font-medium text-sky-700 hover:text-sky-900">
-                Criar conta
-              </Link>
-            </div>
+              <div className="flex-1 space-y-4 px-6">
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  E-mail
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-sky-600" />
+                    <input
+                      type="email"
+                      placeholder="voce@clinica.com"
+                      {...register("email")}
+                      className="h-12 w-full rounded-xl border border-slate-200 pl-11 pr-3 text-[15px] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                    />
+                  </div>
+                  {errors.email?.message !== undefined ? (
+                    <span className="text-xs text-clinic-danger">{errors.email.message}</span>
+                  ) : null}
+                </label>
 
-            <div className="mt-7 flex items-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 p-3 text-xs font-medium text-sky-900">
-              <ShieldCheck className="h-4 w-4 shrink-0" />
-              Ambiente protegido para a equipe da clínica.
-            </div>
-          </form>
-        </section>
+                <label className="grid gap-2 text-sm font-medium text-slate-700">
+                  Senha
+                  <div className="relative">
+                    <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-sky-600" />
+                    <input
+                      type="password"
+                      placeholder="Digite sua senha"
+                      {...register("password")}
+                      className="h-12 w-full rounded-xl border border-slate-200 pl-11 pr-3 text-[15px] outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                    />
+                  </div>
+                  {errors.password?.message !== undefined ? (
+                    <span className="text-xs text-clinic-danger">{errors.password.message}</span>
+                  ) : null}
+                </label>
+
+                <div className="flex justify-end">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm font-medium text-sky-700 transition hover:text-sky-800"
+                  >
+                    Esqueceu sua senha?
+                  </Link>
+                </div>
+
+                {errors.root?.message !== undefined ? (
+                  <p className="rounded-xl bg-clinic-danger/10 p-3 text-sm text-clinic-danger">
+                    {errors.root.message}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="p-6 pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white transition hover:bg-sky-700 disabled:opacity-60"
+                >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                  Entrar
+                </button>
+                <div className="mt-4 text-center text-sm text-slate-600">
+                  Ainda não tem acesso?{" "}
+                  <Link href="/assinatura" className="font-semibold text-sky-700 hover:text-sky-900">
+                    Ver plano
+                  </Link>
+                </div>
+              </div>
+            </form>
+          </section>
+        </div>
       </div>
     </main>
   );

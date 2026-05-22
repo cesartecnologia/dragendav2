@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 const SubinscricaoRedirect = (): never => {
-  redirect("/assinatura");
+  redirect("/subscription");
 };
 
 export default SubinscricaoRedirect;

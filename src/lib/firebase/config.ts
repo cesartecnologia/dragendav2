@@ -10,17 +10,7 @@ export type FirebaseClientConfig = {
   appId: string;
 };
 
-const requiredEnv = (key: string, value: string | undefined): string => {
-  if (value === undefined || value.trim().length === 0) {
-    if (process.env.NODE_ENV === "production") {
-      return "";
-    }
-
-    return "";
-  }
-
-  return value;
-};
+const requiredEnv = (_key: string, value: string | undefined): string => value?.trim() ?? "";
 
 export const firebaseClientConfig: FirebaseClientConfig = {
   apiKey: requiredEnv(
@@ -45,10 +35,40 @@ export const firebaseClientConfig: FirebaseClientConfig = {
   ),
 };
 
+export const missingFirebaseClientEnv = (): string[] =>
+  [
+    ["NEXT_PUBLIC_FIREBASE_API_KEY", firebaseClientConfig.apiKey],
+    ["NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN", firebaseClientConfig.authDomain],
+    ["NEXT_PUBLIC_FIREBASE_PROJECT_ID", firebaseClientConfig.projectId],
+    ["NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID", firebaseClientConfig.messagingSenderId],
+    ["NEXT_PUBLIC_FIREBASE_APP_ID", firebaseClientConfig.appId],
+  ]
+    .filter(([, value]) => value.trim().length === 0)
+    .map(([key]) => key);
+
+export const isFirebaseClientConfigured = (): boolean =>
+  missingFirebaseClientEnv().length === 0;
+
+export const assertFirebaseClientConfigured = (): void => {
+  const missing = missingFirebaseClientEnv();
+
+  if (missing.length > 0) {
+    throw new Error(`Configuração do Firebase ausente: ${missing.join(", ")}`);
+  }
+};
+
 export const firebaseApp: FirebaseApp =
-  getApps().length > 0 ? getApp() : initializeApp(firebaseClientConfig);
+  isFirebaseClientConfigured()
+    ? getApps().length > 0
+      ? getApp()
+      : initializeApp(firebaseClientConfig)
+    : ({} as FirebaseApp);
 
 export const firebaseAuth: Auth =
-  typeof window === "undefined" ? ({} as Auth) : getAuth(firebaseApp);
+  typeof window === "undefined" || !isFirebaseClientConfigured()
+    ? ({} as Auth)
+    : getAuth(firebaseApp);
 
-export const firestoreDb: Firestore = getFirestore(firebaseApp);
+export const firestoreDb: Firestore = isFirebaseClientConfigured()
+  ? getFirestore(firebaseApp)
+  : ({} as Firestore);

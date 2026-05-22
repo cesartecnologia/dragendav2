@@ -3,6 +3,10 @@ import {
   processAsaasWebhook,
   type AsaasWebhookPayload,
 } from "../../../../lib/services/subscriptionService";
+import {
+  markCheckoutSessionFromCheckoutWebhook,
+  markCheckoutSessionFromPaymentWebhook,
+} from "../../../../lib/services/checkoutSessionService";
 
 export const runtime = "nodejs";
 
@@ -46,6 +50,30 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
         { message: "Evento inválido" },
         { status: 400 },
       );
+    }
+
+    if (payload.checkout?.id !== undefined) {
+      await markCheckoutSessionFromCheckoutWebhook({
+        checkoutId: payload.checkout.id,
+        checkoutStatus: payload.checkout.status,
+        customerId: payload.checkout.customer,
+        subscriptionId: payload.checkout.subscription,
+      });
+    }
+
+    if (payload.payment !== undefined) {
+      await markCheckoutSessionFromPaymentWebhook({
+        paymentId: payload.payment.id,
+        paymentStatus: payload.payment.status,
+        customerId: payload.payment.customer,
+        subscriptionId: payload.payment.subscription,
+        checkoutSessionId: payload.payment.checkoutSession,
+        paymentLinkId: payload.payment.paymentLink,
+        externalReference: payload.payment.externalReference,
+        invoiceUrl: payload.payment.invoiceUrl ?? payload.payment.bankSlipUrl,
+        billingType: payload.payment.billingType,
+        value: payload.payment.value,
+      });
     }
 
     await processAsaasWebhook(payload);

@@ -15,8 +15,12 @@ import {
   type User as FirebaseUser,
   type Unsubscribe,
 } from "firebase/auth";
-import { firebaseAuth } from "./config";
-import { firebaseClientConfig } from "./config";
+import {
+  assertFirebaseClientConfigured,
+  firebaseAuth,
+  firebaseClientConfig,
+  isFirebaseClientConfigured,
+} from "./config";
 
 export type AuthCredentials = {
   email: string;
@@ -35,6 +39,7 @@ export type AuthErrorCode =
   | "auth/email-already-in-use"
   | "auth/weak-password"
   | "auth/invalid-email"
+  | "firebase/missing-config"
   | "unknown";
 
 export type AuthResult = {
@@ -60,10 +65,18 @@ export const authErrorMessages: Record<AuthErrorCode, string> = {
   "auth/email-already-in-use": "Este email já está em uso",
   "auth/weak-password": "A senha deve ter pelo menos 6 caracteres",
   "auth/invalid-email": "Email inválido",
+  "firebase/missing-config": "Configuração do Firebase ausente no .env.local",
   unknown: "Não foi possível autenticar. Tente novamente",
 };
 
 export const getAuthErrorCode = (error: unknown): AuthErrorCode => {
+  if (
+    error instanceof Error &&
+    error.message.startsWith("Configuração do Firebase ausente:")
+  ) {
+    return "firebase/missing-config";
+  }
+
   if (
     typeof error === "object" &&
     error !== null &&
@@ -84,6 +97,7 @@ export const getAuthErrorMessage = (error: unknown): string => {
 export const loginWithEmail = async (
   credentials: AuthCredentials,
 ): Promise<AuthResult> => {
+  assertFirebaseClientConfigured();
   await setPersistence(firebaseAuth, browserLocalPersistence);
   const credential = await signInWithEmailAndPassword(
     firebaseAuth,
@@ -98,6 +112,7 @@ export const loginWithEmail = async (
 export const registerWithEmail = async (
   credentials: RegisterCredentials,
 ): Promise<AuthResult> => {
+  assertFirebaseClientConfigured();
   await setPersistence(firebaseAuth, browserLocalPersistence);
   const credential = await createUserWithEmailAndPassword(
     firebaseAuth,
@@ -112,6 +127,7 @@ export const registerWithEmail = async (
 export const createSecondaryAuthUser = async (
   credentials: AuthCredentials,
 ): Promise<AuthResult> => {
+  assertFirebaseClientConfigured();
   const appName = `employee-${crypto.randomUUID()}`;
   const secondaryApp: FirebaseApp = initializeApp(firebaseClientConfig, appName);
   const secondaryAuth = getAuth(secondaryApp);
@@ -131,17 +147,27 @@ export const createSecondaryAuthUser = async (
 };
 
 export const sendResetPasswordEmail = async (email: string): Promise<void> => {
+  assertFirebaseClientConfigured();
   await sendPasswordResetEmail(firebaseAuth, email);
 };
 
 export const logout = async (): Promise<void> => {
   clearAuthCookie();
+  if (!isFirebaseClientConfigured()) {
+    return;
+  }
+
   await signOut(firebaseAuth);
 };
 
 export const listenAuthState = (
   callback: (user: FirebaseUser | null) => void,
 ): Unsubscribe => {
+  if (!isFirebaseClientConfigured()) {
+    callback(null);
+    return () => undefined;
+  }
+
   return onAuthStateChanged(firebaseAuth, (user) => {
     if (user === null) {
       callback(null);

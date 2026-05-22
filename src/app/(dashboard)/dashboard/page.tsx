@@ -18,7 +18,7 @@ import { EmptyState } from "../../../components/shared/EmptyState";
 import { LoadingSkeleton } from "../../../components/shared/LoadingSkeleton";
 import { useAppointmentsByRange } from "../../../lib/hooks/useAppointments";
 import { useAuth } from "../../../lib/hooks/useAuth";
-import { createDateRange, formatDateBR } from "../../../lib/utils/date";
+import { createDateRange, formatDateBR, todayISO } from "../../../lib/utils/date";
 
 type WeatherState = {
   temperature: number | null;
@@ -93,6 +93,9 @@ const DashboardPage = (): JSX.Element => {
       }),
     [activeData],
   );
+  const currentBrazilDate = useMemo(() => todayISO(), [now]);
+  const currentBrazilMonth = currentBrazilDate.slice(0, 7);
+  const currentWeekdayIndex = new Date(`${currentBrazilDate}T12:00:00`).getDay();
   const maxWeekday = Math.max(1, ...weekdayData.map((item) => item.count));
   const displayName = user?.name ?? "Usuário";
   const formattedDate = new Intl.DateTimeFormat("pt-BR", {
@@ -237,7 +240,11 @@ const DashboardPage = (): JSX.Element => {
                   {item.count} agendamento{item.count === 1 ? "" : "s"} no mês
                 </div>
                 <div
-                  className={`rounded-t-md ${index === 2 ? "bg-clinic-primary" : "bg-clinic-border"}`}
+                  className={`rounded-t-md ${
+                    selectedMonth === currentBrazilMonth && index === currentWeekdayIndex
+                      ? "bg-clinic-primary"
+                      : "bg-clinic-border"
+                  }`}
                   style={{ height: `${Math.max(8, (item.count / maxWeekday) * 100)}%` }}
                 />
                 <span className="text-center text-xs text-clinic-muted">{item.label}</span>

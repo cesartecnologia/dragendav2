@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getBearerToken, verifyFirebaseIdToken } from "../../../../lib/firebase/serverAuth";
-import { bootstrapClinicOwner } from "../../../../lib/services/authPostgresService";
+import { bootstrapMasterOwner } from "../../../../lib/services/authPostgresService";
+import { isMasterEmail } from "../../../../lib/services/subscriptionService";
 
 export const runtime = "nodejs";
 
@@ -10,12 +11,18 @@ const schema = z.object({
   ownerName: z.string().min(2, "Informe o nome"),
   ownerEmail: z.string().email("Email inválido"),
   clinicName: z.string().min(2, "Informe a clínica"),
-  cnpj: z.string().min(14, "Informe o CNPJ"),
-  phone: z.string().min(10, "Informe o telefone"),
-  city: z.string().min(2, "Informe a cidade"),
-  state: z.string().length(2, "Informe a UF"),
-  checkoutSessionId: z.string().uuid("Pagamento inválido").optional(),
+  accessCode: z.string().optional(),
 });
+
+const hasValidAccessCode = (accessCode: string | undefined): boolean => {
+  const configuredCode = process.env.MASTER_ACCESS_CODE;
+
+  if (configuredCode === undefined || configuredCode.trim().length === 0) {
+    return true;
+  }
+
+  return accessCode === configuredCode;
+};
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
   try {
@@ -43,15 +50,31 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
       );
     }
 
-    const user = await bootstrapClinicOwner({
+    if (!isMasterEmail(parsed.data.ownerEmail) || !hasValidAccessCode(parsed.data.accessCode)) {
+      return NextResponse.json(
+        { message: "Acesso master não autorizado" },
+        { status: 403 },
+      );
+    }
+
+    const user = await bootstrapMasterOwner({
       firebaseUid: firebaseUser.uid,
-      ...parsed.data,
+      clinicId: parsed.data.clinicId,
+      ownerName: parsed.data.ownerName,
+      ownerEmail: parsed.data.ownerEmail,
+      clinicName: parsed.data.clinicName,
     });
 
     return NextResponse.json({ user });
-  } catch {
+  } catch (error: unknown) {
+    console.error("master/bootstrap failed", error);
     return NextResponse.json(
-      { message: "Não foi possível preparar a clínica" },
+      {
+        message:
+          process.env.NODE_ENV === "development" && error instanceof Error
+            ? error.message
+            : "Não foi possível preparar o acesso master",
+      },
       { status: 500 },
     );
   }

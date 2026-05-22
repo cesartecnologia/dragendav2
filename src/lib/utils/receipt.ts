@@ -2,6 +2,7 @@ import type { Appointment, Clinic } from "../types";
 import { formatDateBR } from "./date";
 import { formatMoneyWithWords } from "./money";
 import { maskCnpj, maskPhone } from "./masks";
+import { drawClinicLogo } from "./pdfLogo";
 
 const statusLabels: Record<string, string> = {
   scheduled: "Agendado",
@@ -75,6 +76,7 @@ export const generateAppointmentReceiptPdf = async (
 
   pdf.setFillColor(247, 245, 242);
   pdf.rect(0, 0, pageWidth, 42, "F");
+  await drawClinicLogo(pdf, clinic?.logoUrl, 14, 7, 26, 26);
   pdf.setTextColor(44, 44, 42);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(15);

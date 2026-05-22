@@ -74,6 +74,8 @@ export type AsaasWebhookPayment = {
   id?: string;
   customer?: string;
   subscription?: string;
+  checkoutSession?: string;
+  paymentLink?: string;
   externalReference?: string;
   status?: string;
   value?: number;
@@ -81,6 +83,8 @@ export type AsaasWebhookPayment = {
   dueDate?: string;
   paymentDate?: string;
   billingType?: string;
+  invoiceUrl?: string;
+  bankSlipUrl?: string;
 };
 
 export type AsaasWebhookSubscription = {
@@ -97,6 +101,8 @@ export type AsaasWebhookCheckout = {
   id?: string;
   externalReference?: string;
   status?: string;
+  customer?: string;
+  subscription?: string;
 };
 
 export type AsaasWebhookPayload = {
@@ -123,7 +129,7 @@ const subscriptionFromRow = (
   currentPeriodEnd: row.currentPeriodEnd,
 });
 
-const isMasterEmail = (email: string): boolean => {
+export const isMasterEmail = (email: string): boolean => {
   const emails = process.env.MASTER_USER_EMAILS ?? "";
   return emails
     .split(",")

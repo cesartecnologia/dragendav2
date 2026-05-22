@@ -2,6 +2,7 @@ import { formatDateBR } from "../utils/date";
 import { sentenceCase } from "../utils/labels";
 import { maskCnpj, maskPhone } from "../utils/masks";
 import { formatMoney } from "../utils/money";
+import { drawClinicLogo } from "../utils/pdfLogo";
 import type { Clinic, DateRange, ReportData, ReportRow } from "../types";
 
 const moneyColumns = new Set([
@@ -73,6 +74,7 @@ export const generateReportPDF = async (
 
   pdf.setFillColor(247, 245, 242);
   pdf.rect(0, 0, pageWidth, 42, "F");
+  await drawClinicLogo(pdf, clinic?.logoUrl, 14, 7, 26, 26);
   pdf.setTextColor(44, 44, 42);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(15);

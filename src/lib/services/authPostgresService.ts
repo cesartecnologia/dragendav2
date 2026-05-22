@@ -2,6 +2,12 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { clinics, subscriptions, users } from "../db/schema";
 import type { Address, Role, User } from "../types";
+import {
+  completeOnboardingForSession,
+  getCheckoutSessionById,
+  getOnboardingBySessionId,
+} from "./checkoutSessionService";
+import { isMasterEmail } from "./subscriptionService";
 
 export type ClientUser = Omit<User, "createdAt"> & {
   createdAt: string;
@@ -17,6 +23,7 @@ export type BootstrapClinicInput = {
   phone: string;
   city: string;
   state: string;
+  checkoutSessionId?: string;
 };
 
 export type SyncFirebaseUserInput = {
@@ -43,6 +50,14 @@ export type SyncFirebaseUserInput = {
   };
 };
 
+export type BootstrapMasterInput = {
+  firebaseUid: string;
+  ownerName: string;
+  ownerEmail: string;
+  clinicId: string;
+  clinicName: string;
+};
+
 const emptyAddress = (city: string, state: string): Address => ({
   cep: "",
   street: "",
@@ -52,6 +67,40 @@ const emptyAddress = (city: string, state: string): Address => ({
   city,
   state,
 });
+
+const buildMasterCnpj = (clinicId: string): string =>
+  clinicId.replace(/\D/g, "").slice(0, 14).padEnd(14, "0");
+
+const ensureMasterSubscription = async (clinicId: string): Promise<void> => {
+  await getDb()
+    .insert(subscriptions)
+    .values({
+      clinicId,
+      provider: "asaas",
+      providerCustomerId: `master:${clinicId}`,
+      providerSubscriptionId: `master:${clinicId}`,
+      status: "active",
+      plan: "starter",
+      amount: 0,
+      nextDueDate: null,
+      currentPeriodEnd: null,
+      trialEndsAt: null,
+    })
+    .onConflictDoUpdate({
+      target: subscriptions.clinicId,
+      set: {
+        providerCustomerId: `master:${clinicId}`,
+        providerSubscriptionId: `master:${clinicId}`,
+        status: "active",
+        amount: 0,
+        nextDueDate: null,
+        currentPeriodEnd: null,
+        trialEndsAt: null,
+        blockedAt: null,
+        updatedAt: new Date(),
+      },
+    });
+};
 
 const toClientUser = (row: typeof users.$inferSelect): ClientUser => ({
   id: row.firebaseUid,
@@ -158,6 +207,125 @@ export const bootstrapClinicOwner = async (
 
     return existingRow;
   });
+
+  if (input.checkoutSessionId !== undefined) {
+    const checkoutSession = await getCheckoutSessionById(input.checkoutSessionId);
+    const onboarding = await getOnboardingBySessionId(input.checkoutSessionId);
+
+    if (checkoutSession === null || onboarding === null) {
+      throw new Error("Sessão de pagamento não encontrada");
+    }
+
+    if (checkoutSession.status !== "paid" || onboarding.status !== "released") {
+      throw new Error("Pagamento ainda não confirmado");
+    }
+
+    await getDb()
+      .insert(subscriptions)
+      .values({
+        clinicId: input.clinicId,
+        provider: "asaas",
+        providerCustomerId: checkoutSession.asaasCustomerId ?? "",
+        providerSubscriptionId:
+          checkoutSession.asaasSubscriptionId ??
+          checkoutSession.asaasCheckoutId ??
+          input.checkoutSessionId,
+        status: "active",
+        plan: "starter",
+        amount: checkoutSession.value,
+        nextDueDate: new Date().toISOString().slice(0, 10),
+        currentPeriodEnd: new Date().toISOString().slice(0, 10),
+      })
+      .onConflictDoUpdate({
+        target: subscriptions.clinicId,
+        set: {
+          providerCustomerId: checkoutSession.asaasCustomerId ?? "",
+          providerSubscriptionId:
+            checkoutSession.asaasSubscriptionId ??
+            checkoutSession.asaasCheckoutId ??
+            input.checkoutSessionId,
+          status: "active",
+          amount: checkoutSession.value,
+          updatedAt: new Date(),
+        },
+      });
+
+    await completeOnboardingForSession(input.checkoutSessionId, {
+      userId: createdUser.id,
+      clinicId: input.clinicId,
+    });
+  }
+
+  return toClientUser(createdUser);
+};
+
+export const bootstrapMasterOwner = async (
+  input: BootstrapMasterInput,
+): Promise<ClientUser> => {
+  if (!isMasterEmail(input.ownerEmail)) {
+    throw new Error("Email master não autorizado");
+  }
+
+  const existingUser = await getUserByFirebaseUid(input.firebaseUid);
+
+  if (existingUser !== null) {
+    await ensureMasterSubscription(existingUser.clinicId);
+    return existingUser;
+  }
+
+  const db = getDb();
+  const createdUser = await db.transaction(async (tx) => {
+    await tx
+      .insert(clinics)
+      .values({
+        id: input.clinicId,
+        name: input.clinicName,
+        cnpj: buildMasterCnpj(input.clinicId),
+        phone: "0000000000",
+        email: input.ownerEmail,
+        address: emptyAddress("Master", "SP"),
+        plan: "starter",
+        active: true,
+      })
+      .onConflictDoNothing({
+        target: clinics.id,
+      });
+
+    const userRows = await tx
+      .insert(users)
+      .values({
+        firebaseUid: input.firebaseUid,
+        clinicId: input.clinicId,
+        role: "OWNER",
+        name: input.ownerName,
+        email: input.ownerEmail,
+        active: true,
+      })
+      .onConflictDoNothing({
+        target: users.firebaseUid,
+      })
+      .returning();
+
+    if (userRows[0] !== undefined) {
+      return userRows[0];
+    }
+
+    const existingRows = await tx
+      .select()
+      .from(users)
+      .where(eq(users.firebaseUid, input.firebaseUid))
+      .limit(1);
+
+    const existingRow = existingRows[0];
+
+    if (existingRow === undefined) {
+      throw new Error("Não foi possível criar usuário master");
+    }
+
+    return existingRow;
+  });
+
+  await ensureMasterSubscription(createdUser.clinicId);
 
   return toClientUser(createdUser);
 };
