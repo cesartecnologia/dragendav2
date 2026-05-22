@@ -116,8 +116,13 @@ const getRequiredEnv = (key: string, value: string | undefined): string => {
   return value;
 };
 
+const getOptionalEnv = (...values: Array<string | undefined>): string | undefined => {
+  return values.find((value) => value !== undefined && value.trim().length > 0);
+};
+
 const getAsaasBaseUrl = (): string => {
   const configuredUrl =
+    process.env.ASAAS_API_BASE_URL?.replace(/\/$/, "") ??
     process.env.ASAAS_API_URL?.replace(/\/$/, "") ??
     "https://api-sandbox.asaas.com/v3";
 
@@ -133,17 +138,26 @@ const getAsaasBaseUrl = (): string => {
 };
 
 const getAsaasWebBaseUrl = (): string => {
+  const configuredUrl = process.env.ASAAS_CHECKOUT_BASE_URL?.replace(/\/$/, "");
+
+  if (configuredUrl !== undefined && configuredUrl.length > 0) {
+    return configuredUrl;
+  }
+
   const apiUrl = getAsaasBaseUrl();
   return apiUrl.includes("sandbox")
-    ? "https://sandbox.asaas.com"
-    : "https://www.asaas.com";
+    ? "https://sandbox.asaas.com/checkoutSession/show"
+    : "https://asaas.com/checkoutSession/show";
 };
 
 const asaasFetch = async <TResponse>(
   path: string,
   init: RequestInit,
 ): Promise<TResponse> => {
-  const accessToken = getRequiredEnv("ASAAS_API_KEY", process.env.ASAAS_API_KEY);
+  const accessToken = getRequiredEnv(
+    "ASAAS_API_KEY ou ASAAS_ACCESS_TOKEN",
+    getOptionalEnv(process.env.ASAAS_API_KEY, process.env.ASAAS_ACCESS_TOKEN),
+  );
   const response = await fetch(`${getAsaasBaseUrl()}${path}`, {
     ...init,
     headers: {
@@ -197,6 +211,6 @@ export const getAsaasCheckoutUrl = (checkout: AsaasCheckoutResponse): string => 
     checkout.checkoutUrl ??
     checkout.url ??
     checkout.link ??
-    `${getAsaasWebBaseUrl()}/checkoutSession/show?id=${encodeURIComponent(checkout.id)}`
+    `${getAsaasWebBaseUrl()}/${encodeURIComponent(checkout.id)}`
   );
 };

@@ -255,6 +255,12 @@ const getAsaasCallbackBaseUrl = (requestBaseUrl: string): string => {
   return normalizedUrl;
 };
 
+const formatAsaasDateTime = (date: Date): string => {
+  const pad = (value: number): string => value.toString().padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
+};
+
 export const processAsaasWebhook = async (
   payload: AsaasWebhookPayload,
 ): Promise<void> => {
@@ -463,7 +469,9 @@ export const createClinicHostedCheckout = async (
   }
 
   const normalizedBaseUrl = getAsaasCallbackBaseUrl(input.callbackBaseUrl);
-  const nextDueDate = new Date().toISOString().slice(0, 10);
+  const nextDueDateAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  const nextDueDate = formatAsaasDateTime(nextDueDateAt);
+  const nextDueDateOnly = nextDueDate.slice(0, 10);
   const checkout = await createAsaasCheckout({
     billingTypes: [ASAAS_BILLING_TYPE.CREDIT_CARD],
     chargeTypes: [ASAAS_CHARGE_TYPE.RECURRENT],
@@ -498,8 +506,8 @@ export const createClinicHostedCheckout = async (
         status: "trialing",
         plan: input.plan,
         amount: input.amount,
-        nextDueDate,
-        currentPeriodEnd: existing?.currentPeriodEnd ?? nextDueDate,
+        nextDueDate: nextDueDateOnly,
+        currentPeriodEnd: existing?.currentPeriodEnd ?? nextDueDateOnly,
       })
       .onConflictDoUpdate({
         target: subscriptions.clinicId,
@@ -509,8 +517,8 @@ export const createClinicHostedCheckout = async (
           status: existing?.status ?? "trialing",
           plan: input.plan,
           amount: input.amount,
-          nextDueDate,
-          currentPeriodEnd: existing?.currentPeriodEnd ?? nextDueDate,
+          nextDueDate: nextDueDateOnly,
+          currentPeriodEnd: existing?.currentPeriodEnd ?? nextDueDateOnly,
           updatedAt: new Date(),
         },
       })
