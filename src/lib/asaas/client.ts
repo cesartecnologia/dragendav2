@@ -14,6 +14,13 @@ export const ASAAS_CYCLE = {
 
 export type AsaasCycle = (typeof ASAAS_CYCLE)[keyof typeof ASAAS_CYCLE];
 
+export const ASAAS_CHARGE_TYPE = {
+  RECURRENT: "RECURRENT",
+} as const;
+
+export type AsaasChargeType =
+  (typeof ASAAS_CHARGE_TYPE)[keyof typeof ASAAS_CHARGE_TYPE];
+
 export type AsaasCustomerInput = {
   name: string;
   email: string;
@@ -62,6 +69,41 @@ export type AsaasSubscriptionResponse = {
   bankSlipUrl?: string;
 };
 
+export type AsaasCheckoutInput = {
+  billingTypes: AsaasBillingType[];
+  chargeTypes: AsaasChargeType[];
+  minutesToExpire: number;
+  externalReference: string;
+  callback: {
+    successUrl: string;
+    cancelUrl: string;
+    expiredUrl: string;
+  };
+  items: Array<{
+    name: string;
+    description: string;
+    quantity: number;
+    value: number;
+  }>;
+  customerData: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+    phone: string;
+  };
+  subscription: {
+    cycle: AsaasCycle;
+    nextDueDate: string;
+  };
+};
+
+export type AsaasCheckoutResponse = {
+  id: string;
+  url?: string;
+  checkoutUrl?: string;
+  link?: string;
+};
+
 export type AsaasErrorResponse = {
   errors?: Array<{ code?: string; description?: string }>;
 };
@@ -76,6 +118,13 @@ const getRequiredEnv = (key: string, value: string | undefined): string => {
 
 const getAsaasBaseUrl = (): string => {
   return process.env.ASAAS_API_URL?.replace(/\/$/, "") ?? "https://sandbox.asaas.com/api/v3";
+};
+
+const getAsaasWebBaseUrl = (): string => {
+  const apiUrl = getAsaasBaseUrl();
+  return apiUrl.includes("sandbox")
+    ? "https://sandbox.asaas.com"
+    : "https://www.asaas.com";
 };
 
 const asaasFetch = async <TResponse>(
@@ -120,4 +169,22 @@ export const createAsaasSubscription = async (
     method: "POST",
     body: JSON.stringify(input),
   });
+};
+
+export const createAsaasCheckout = async (
+  input: AsaasCheckoutInput,
+): Promise<AsaasCheckoutResponse> => {
+  return await asaasFetch<AsaasCheckoutResponse>("/checkouts", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+};
+
+export const getAsaasCheckoutUrl = (checkout: AsaasCheckoutResponse): string => {
+  return (
+    checkout.checkoutUrl ??
+    checkout.url ??
+    checkout.link ??
+    `${getAsaasWebBaseUrl()}/checkoutSession/show?id=${encodeURIComponent(checkout.id)}`
+  );
 };

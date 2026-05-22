@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getUserByFirebaseUid } from "../../../../lib/services/authPostgresService";
 import {
-  createClinicSubscription,
+  createClinicHostedCheckout,
   getBillingAccess,
   getSubscriptionByClinic,
 } from "../../../../lib/services/subscriptionService";
@@ -59,10 +59,11 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     );
   }
 
-  const subscription = await createClinicSubscription({
+  const subscription = await createClinicHostedCheckout({
     clinicId: user.clinicId,
     plan: parsed.data.plan,
     amount: parsed.data.amount,
+    callbackBaseUrl: request.nextUrl.origin,
   });
 
   return NextResponse.json({ subscription });

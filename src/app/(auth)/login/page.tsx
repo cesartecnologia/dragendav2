@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, CalendarDays, CheckCircle2, HeartPulse, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, HeartPulse, Loader2, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -47,68 +47,75 @@ const LoginPage = (): JSX.Element => {
   };
 
   return (
-    <main className="min-h-screen bg-[#eef7ff] text-slate-950">
-      <div className="grid min-h-screen lg:grid-cols-[1.02fr_0.98fr]">
-        <section className="relative hidden overflow-hidden px-10 py-8 lg:block">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(14,165,233,0.24),transparent_34%),radial-gradient(circle_at_80%_70%,rgba(125,211,252,0.28),transparent_36%),linear-gradient(135deg,#f8fcff_0%,#e7f6ff_100%)]" />
-          <div className="relative flex h-full flex-col">
-            <div className="flex items-center gap-3">
-              <AppLogo />
-              <span className="text-lg font-bold">Dr. Agenda</span>
-            </div>
+    <main className="min-h-screen bg-[#f5fbff] px-4 py-4 text-slate-950 sm:px-6 sm:py-6">
+      <div className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-6xl flex-col gap-5">
+        <header className="flex items-center justify-between rounded-[28px] border border-white/70 bg-white/95 px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6">
+          <Link href="/" className="flex items-center gap-3">
+            <AppLogo className="h-10 w-10" />
+            <span className="text-lg font-bold tracking-tight text-slate-950">Dr. Agenda</span>
+          </Link>
+          <Link
+            href="/assinatura"
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Assinatura
+          </Link>
+        </header>
 
-            <div className="my-auto max-w-xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-md border border-sky-100 bg-white px-3 py-2 text-sm font-semibold text-sky-800 shadow-sm">
-                <HeartPulse className="h-4 w-4" />
-                Clínica no controle, atendimento mais leve
-              </div>
-              <h1 className="text-5xl font-bold leading-tight tracking-normal">
-                Acesse sua rotina médica com tudo no lugar.
-              </h1>
-              <p className="mt-5 text-lg leading-8 text-slate-600">
-                Agenda, pacientes, médicos e financeiro em uma experiência simples para a equipe inteira trabalhar melhor.
-              </p>
-
-              <div className="mt-8 grid gap-3">
-                {[
-                  "Agenda do dia com visão clara",
-                  "Confirmações e lembretes organizados",
-                  "Dados da clínica sempre à mão",
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-3 rounded-md border border-white bg-white/70 p-3 shadow-sm backdrop-blur">
-                    <CheckCircle2 className="h-5 w-5 text-sky-600" />
-                    <span className="text-sm font-medium text-slate-700">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-md border border-white bg-white/80 p-4 shadow-xl shadow-sky-950/10 backdrop-blur">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-600">Próximos atendimentos</p>
-                  <p className="mt-1 text-2xl font-bold">12 confirmados</p>
+        <section className="grid flex-1 items-center gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="hidden lg:block">
+            <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.06)]">
+              <div className="rounded-[26px] border border-sky-100 bg-sky-50/80 p-5">
+                <div className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white px-3 py-1 text-xs font-semibold text-sky-800">
+                  <HeartPulse className="h-3.5 w-3.5" />
+                  Rotina da clínica
                 </div>
-                <CalendarDays className="h-10 w-10 rounded-md bg-sky-50 p-2 text-sky-700" />
+                <h1 className="mt-5 max-w-lg text-5xl font-bold leading-tight tracking-tight text-slate-950">
+                  Acesse sua clínica com tudo no lugar.
+                </h1>
+                <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
+                  Agenda, pacientes, médicos e financeiro em uma experiência simples para a equipe inteira trabalhar melhor.
+                </p>
+
+                <div className="mt-7 grid gap-3">
+                  {[
+                    "Agenda do dia com visão clara",
+                    "Atendimentos organizados por status",
+                    "Dados da clínica sempre à mão",
+                  ].map((item) => (
+                    <div key={item} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
+                      <CheckCircle2 className="h-5 w-5 text-sky-500" />
+                      <span className="text-sm font-medium text-slate-700">{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-7 rounded-[24px] border border-sky-100 bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-600">Próximos atendimentos</p>
+                      <p className="mt-1 text-3xl font-bold text-slate-950">12 confirmados</p>
+                    </div>
+                    <CalendarDays className="h-12 w-12 rounded-2xl bg-sky-50 p-3 text-sky-700" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </section>
 
-        <section className="flex items-center justify-center px-4 py-8">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="w-full max-w-md rounded-md border border-sky-100 bg-white p-6 shadow-2xl shadow-sky-950/10 md:p-8"
+            className="mx-auto w-full max-w-md rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] md:p-8"
           >
-            <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <AppLogo />
-              <span className="text-lg font-bold">Dr. Agenda</span>
-            </div>
-            <div className="mb-7">
-              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-md bg-sky-50 text-sky-700">
-                <LockKeyhole className="h-5 w-5" />
+            <div className="mb-8 flex flex-col items-center text-center">
+              <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
+                <LockKeyhole className="h-6 w-6" />
               </div>
-              <h1 className="text-3xl font-bold tracking-normal text-slate-950">Entrar na clínica</h1>
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-800">
+                <Sparkles className="h-3.5 w-3.5" />
+                Área do cliente
+              </div>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">Entrar na clínica</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Use seu email e senha para continuar seus atendimentos.
               </p>
@@ -120,7 +127,7 @@ const LoginPage = (): JSX.Element => {
                 <input
                   type="email"
                   {...register("email")}
-                  className="h-11 rounded-md border border-sky-100 px-3 text-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                  className="h-11 rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
                 />
                 {errors.email?.message !== undefined ? (
                   <span className="text-xs text-clinic-danger">
@@ -133,7 +140,7 @@ const LoginPage = (): JSX.Element => {
                 <input
                   type="password"
                   {...register("password")}
-                  className="h-11 rounded-md border border-sky-100 px-3 text-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                  className="h-11 rounded-2xl border border-slate-200 px-4 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
                 />
                 {errors.password?.message !== undefined ? (
                   <span className="text-xs text-clinic-danger">
@@ -144,7 +151,7 @@ const LoginPage = (): JSX.Element => {
             </div>
 
             {errors.root?.message !== undefined ? (
-              <p className="mt-4 rounded-md bg-clinic-danger/10 p-3 text-sm text-clinic-danger">
+              <p className="mt-4 rounded-2xl bg-clinic-danger/10 p-3 text-sm text-clinic-danger">
                 {errors.root.message}
               </p>
             ) : null}
@@ -152,7 +159,7 @@ const LoginPage = (): JSX.Element => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-sky-600 px-4 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-700 disabled:opacity-60"
+              className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-700 disabled:opacity-60"
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Entrar
@@ -168,7 +175,7 @@ const LoginPage = (): JSX.Element => {
               </Link>
             </div>
 
-            <div className="mt-7 flex items-center gap-2 rounded-md border border-sky-100 bg-sky-50 p-3 text-xs font-medium text-sky-900">
+            <div className="mt-7 flex items-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 p-3 text-xs font-medium text-sky-900">
               <ShieldCheck className="h-4 w-4 shrink-0" />
               Ambiente protegido para a equipe da clínica.
             </div>

@@ -1,9 +1,12 @@
 import { and, eq } from "drizzle-orm";
 import {
   ASAAS_BILLING_TYPE,
+  ASAAS_CHARGE_TYPE,
   ASAAS_CYCLE,
+  createAsaasCheckout,
   createAsaasCustomer,
   createAsaasSubscription,
+  getAsaasCheckoutUrl,
 } from "../asaas/client";
 import { getDb } from "../db";
 import { billingEvents, clinics, subscriptions } from "../db/schema";
@@ -52,6 +55,13 @@ export type CreateSubscriptionInput = {
   };
 };
 
+export type CreateHostedCheckoutInput = {
+  clinicId: string;
+  plan: ClinicPlan;
+  amount: number;
+  callbackBaseUrl: string;
+};
+
 export type BillingAccess = {
   allowed: boolean;
   master: boolean;
@@ -64,6 +74,7 @@ export type AsaasWebhookPayment = {
   id?: string;
   customer?: string;
   subscription?: string;
+  externalReference?: string;
   status?: string;
   value?: number;
   netValue?: number;
@@ -75,10 +86,17 @@ export type AsaasWebhookPayment = {
 export type AsaasWebhookSubscription = {
   id?: string;
   customer?: string;
+  externalReference?: string;
   status?: string;
   value?: number;
   nextDueDate?: string;
   cycle?: string;
+};
+
+export type AsaasWebhookCheckout = {
+  id?: string;
+  externalReference?: string;
+  status?: string;
 };
 
 export type AsaasWebhookPayload = {
@@ -87,6 +105,7 @@ export type AsaasWebhookPayload = {
   dateCreated?: string;
   payment?: AsaasWebhookPayment;
   subscription?: AsaasWebhookSubscription;
+  checkout?: AsaasWebhookCheckout;
 };
 
 const subscriptionFromRow = (
@@ -203,7 +222,7 @@ const mapAsaasStatus = (event: string, status: string | undefined): Subscription
     return "past_due";
   }
 
-  if (event.includes("RECEIVED") || event.includes("CONFIRMED") || status === "ACTIVE") {
+  if (event.includes("RECEIVED") || event.includes("CONFIRMED") || event.includes("PAID") || status === "ACTIVE") {
     return "active";
   }
 
@@ -213,11 +232,15 @@ const mapAsaasStatus = (event: string, status: string | undefined): Subscription
 const getProviderSubscriptionId = (
   payload: AsaasWebhookPayload,
 ): string | null => {
-  return payload.subscription?.id ?? payload.payment?.subscription ?? null;
+  return payload.subscription?.id ?? payload.payment?.subscription ?? payload.checkout?.id ?? null;
+};
+
+const getExternalReference = (payload: AsaasWebhookPayload): string | null => {
+  return payload.subscription?.externalReference ?? payload.payment?.externalReference ?? payload.checkout?.externalReference ?? null;
 };
 
 const getProviderEventId = (payload: AsaasWebhookPayload): string => {
-  return payload.id ?? `${payload.event}:${payload.payment?.id ?? payload.subscription?.id ?? Date.now().toString()}`;
+  return payload.id ?? `${payload.event}:${payload.payment?.id ?? payload.subscription?.id ?? payload.checkout?.id ?? Date.now().toString()}`;
 };
 
 export const processAsaasWebhook = async (
@@ -226,8 +249,9 @@ export const processAsaasWebhook = async (
   const db = getDb();
   const providerSubscriptionId = getProviderSubscriptionId(payload);
   const providerEventId = getProviderEventId(payload);
+  const externalReference = getExternalReference(payload);
 
-  const existingSubscription =
+  const existingSubscriptionByProvider =
     providerSubscriptionId === null
       ? undefined
       : (
@@ -242,6 +266,17 @@ export const processAsaasWebhook = async (
             )
             .limit(1)
         )[0];
+  const existingSubscription =
+    existingSubscriptionByProvider ??
+    (externalReference === null
+      ? undefined
+      : (
+          await db
+            .select()
+            .from(subscriptions)
+            .where(eq(subscriptions.clinicId, externalReference))
+            .limit(1)
+        )[0]);
 
   await db
     .insert(billingEvents)
@@ -256,7 +291,7 @@ export const processAsaasWebhook = async (
       target: [billingEvents.provider, billingEvents.providerEventId],
     });
 
-  if (existingSubscription === undefined || providerSubscriptionId === null) {
+  if (existingSubscription === undefined) {
     return;
   }
 
@@ -264,7 +299,7 @@ export const processAsaasWebhook = async (
     payload.subscription?.nextDueDate ?? payload.payment?.dueDate ?? existingSubscription.nextDueDate;
   const status = mapAsaasStatus(
     payload.event,
-    payload.subscription?.status ?? payload.payment?.status,
+    payload.subscription?.status ?? payload.payment?.status ?? payload.checkout?.status,
   );
   const amountInCents = Math.round(
     (payload.subscription?.value ?? payload.payment?.value ?? existingSubscription.amount / 100) * 100,
@@ -275,6 +310,7 @@ export const processAsaasWebhook = async (
     .set({
       status,
       amount: amountInCents,
+      ...(providerSubscriptionId === null ? {} : { providerSubscriptionId }),
       nextDueDate,
       currentPeriodEnd: nextDueDate,
       lastEventId: providerEventId,
@@ -389,5 +425,104 @@ export const createClinicSubscription = async (
   return {
     ...subscriptionFromRow(row),
     paymentUrl: subscription.bankSlipUrl ?? subscription.invoiceUrl ?? null,
+  };
+};
+
+export const createClinicHostedCheckout = async (
+  input: CreateHostedCheckoutInput,
+): Promise<SubscriptionView> => {
+  const db = getDb();
+  const clinic = (
+    await db
+      .select()
+      .from(clinics)
+      .where(eq(clinics.id, input.clinicId))
+      .limit(1)
+  )[0];
+
+  if (clinic === undefined) {
+    throw new Error("Clínica não encontrada");
+  }
+
+  const existing = await getSubscriptionByClinic(input.clinicId);
+
+  if (existing?.status === "active") {
+    return existing;
+  }
+
+  const normalizedBaseUrl = input.callbackBaseUrl.replace(/\/$/, "");
+  const nextDueDate = new Date().toISOString().slice(0, 10);
+  const customer = await createAsaasCustomer({
+    name: clinic.name,
+    email: clinic.email,
+    cpfCnpj: clinic.cnpj,
+    phone: clinic.phone,
+  });
+  const checkout = await createAsaasCheckout({
+    billingTypes: [ASAAS_BILLING_TYPE.CREDIT_CARD, ASAAS_BILLING_TYPE.BOLETO],
+    chargeTypes: [ASAAS_CHARGE_TYPE.RECURRENT],
+    minutesToExpire: 1440,
+    externalReference: input.clinicId,
+    callback: {
+      successUrl: `${normalizedBaseUrl}/assinatura?checkout=success`,
+      cancelUrl: `${normalizedBaseUrl}/assinatura?checkout=cancelled`,
+      expiredUrl: `${normalizedBaseUrl}/assinatura?checkout=expired`,
+    },
+    items: [
+      {
+        name: "Plano Premium Dr. Agenda",
+        description: "Assinatura mensal para gestão da clínica",
+        quantity: 1,
+        value: input.amount / 100,
+      },
+    ],
+    customerData: {
+      name: clinic.name,
+      email: clinic.email,
+      cpfCnpj: clinic.cnpj,
+      phone: clinic.phone,
+    },
+    subscription: {
+      cycle: ASAAS_CYCLE.MONTHLY,
+      nextDueDate,
+    },
+  });
+  const row = (
+    await db
+      .insert(subscriptions)
+      .values({
+        clinicId: input.clinicId,
+        provider: "asaas",
+        providerCustomerId: customer.id,
+        providerSubscriptionId: checkout.id,
+        status: "trialing",
+        plan: input.plan,
+        amount: input.amount,
+        nextDueDate,
+        currentPeriodEnd: existing?.currentPeriodEnd ?? nextDueDate,
+      })
+      .onConflictDoUpdate({
+        target: subscriptions.clinicId,
+        set: {
+          providerCustomerId: customer.id,
+          providerSubscriptionId: checkout.id,
+          status: existing?.status ?? "trialing",
+          plan: input.plan,
+          amount: input.amount,
+          nextDueDate,
+          currentPeriodEnd: existing?.currentPeriodEnd ?? nextDueDate,
+          updatedAt: new Date(),
+        },
+      })
+      .returning()
+  )[0];
+
+  if (row === undefined) {
+    throw new Error("Não foi possível criar checkout de assinatura");
+  }
+
+  return {
+    ...subscriptionFromRow(row),
+    paymentUrl: getAsaasCheckoutUrl(checkout),
   };
 };

@@ -7,7 +7,9 @@ export const metadata: Metadata = {
   title: "Dr. Agenda",
   description: "Gestão multi-tenant para clínicas",
   icons: {
-    icon: "/icon.svg",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 
