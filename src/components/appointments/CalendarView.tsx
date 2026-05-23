@@ -55,6 +55,7 @@ export const CalendarView = ({
 }: CalendarViewProps): JSX.Element => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const weekDays = useMemo(() => createWeekDays(appointments), [appointments]);
+  const todayKey = toDateKey(new Date());
   const appointmentsByDateHour = useMemo(() => {
     const map = new Map<string, Appointment[]>();
 
@@ -80,14 +81,21 @@ export const CalendarView = ({
         <div className="p-3 text-center text-clinic-primary">
           <CalendarClock className="mx-auto h-5 w-5" />
         </div>
-        {weekDays.map((date) => (
-          <div key={date} className="border-l border-clinic-border p-3 text-center">
-            <p className="text-sm font-semibold text-clinic-text">
-              {new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short" })}
-            </p>
-            <p className="text-xs text-clinic-muted">{formatDateBR(date)}</p>
-          </div>
-        ))}
+        {weekDays.map((date) => {
+          const isToday = date === todayKey;
+
+          return (
+            <div
+              key={date}
+              className={`border-l border-clinic-border p-3 text-center ${isToday ? "bg-clinic-primary/10 ring-1 ring-inset ring-clinic-primary/30" : ""}`}
+            >
+              <p className="text-sm font-semibold text-clinic-text">
+                {new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short" })}
+              </p>
+              <p className="text-xs text-clinic-muted">{formatDateBR(date)}</p>
+            </div>
+          );
+        })}
       </div>
       <div className="max-h-[620px] overflow-auto">
         {hours.map((hour) => (
@@ -99,11 +107,10 @@ export const CalendarView = ({
               const items = (appointmentsByDateHour.get(`${date}_${hour}`) ?? []).filter(
                 (appointment) => appointment.status !== "cancelled",
               );
-              const isToday = date === toDateKey(new Date());
               return (
                 <div
                   key={`${date}_${hour}`}
-                  className={`min-h-28 border-r border-clinic-border p-1.5 text-left last:border-r-0 hover:bg-clinic-bg ${isToday ? "bg-clinic-primary/5 ring-1 ring-inset ring-clinic-primary/30" : ""}`}
+                  className="min-h-28 border-r border-clinic-border p-1.5 text-left last:border-r-0 hover:bg-clinic-bg"
                 >
                   <div className="grid max-h-24 gap-1 overflow-y-auto pr-1">
                     {items.map((appointment) => (
