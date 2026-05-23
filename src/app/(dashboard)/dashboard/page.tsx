@@ -87,9 +87,16 @@ const DashboardPage = (): JSX.Element => {
   };
   const weekdayData = useMemo(
     () =>
-      ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((label, index) => {
-        const count = activeData.filter((appointment) => new Date(`${appointment.date}T12:00:00`).getDay() === index).length;
-        return { label, count };
+      [
+        { label: "Seg", dayIndex: 1 },
+        { label: "Ter", dayIndex: 2 },
+        { label: "Qua", dayIndex: 3 },
+        { label: "Qui", dayIndex: 4 },
+        { label: "Sex", dayIndex: 5 },
+        { label: "Sáb", dayIndex: 6 },
+      ].map((weekday) => {
+        const count = activeData.filter((appointment) => new Date(`${appointment.date}T12:00:00`).getDay() === weekday.dayIndex).length;
+        return { ...weekday, count };
       }),
     [activeData],
   );
@@ -233,15 +240,15 @@ const DashboardPage = (): JSX.Element => {
             <h2 className="text-lg font-semibold text-clinic-text">Fluxo de atendimentos</h2>
             <Clock3 className="h-5 w-5 text-clinic-primary" />
           </div>
-          <div className="mt-8 grid h-64 grid-cols-7 items-end gap-3">
-            {weekdayData.map((item, index) => (
+          <div className="mt-8 grid h-64 grid-cols-6 items-end gap-3">
+            {weekdayData.map((item) => (
               <div key={item.label} className="group relative flex h-full flex-col justify-end gap-2">
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-clinic-text px-3 py-2 text-xs text-white shadow-lg group-hover:block">
                   {item.count} agendamento{item.count === 1 ? "" : "s"} no mês
                 </div>
                 <div
                   className={`rounded-t-md ${
-                    selectedMonth === currentBrazilMonth && index === currentWeekdayIndex
+                    selectedMonth === currentBrazilMonth && item.dayIndex === currentWeekdayIndex
                       ? "bg-clinic-primary"
                       : "bg-clinic-border"
                   }`}

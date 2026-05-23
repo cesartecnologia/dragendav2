@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { useClinic } from "../../lib/hooks/useClinic";
 import { useAuth } from "../../lib/hooks/useAuth";
+import { canAccessDashboardRoute } from "../../lib/utils/accessControl";
 
 export type DashboardAuthGateProps = {
   children: ReactNode;
@@ -57,6 +58,12 @@ export const DashboardAuthGate = ({
   useEffect(() => {
     if (isLoading || firebaseUser === null || user === null) {
       setSubscriptionLoading(true);
+      return;
+    }
+
+    if (!canAccessDashboardRoute(user.role, pathname)) {
+      router.replace("/dashboard");
+      setSubscriptionLoading(false);
       return;
     }
 

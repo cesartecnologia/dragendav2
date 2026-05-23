@@ -91,7 +91,7 @@ export const CalendarView = ({
       </div>
       <div className="max-h-[620px] overflow-auto">
         {hours.map((hour) => (
-          <div key={hour} className="grid min-h-28 grid-cols-[56px_repeat(7,minmax(104px,1fr))] border-b border-clinic-border last:border-b-0">
+          <div key={hour} className="grid min-h-28 grid-cols-[64px_repeat(7,minmax(120px,1fr))] border-b border-clinic-border last:border-b-0">
             <div className="border-r border-clinic-border p-2 text-center text-sm text-clinic-muted">
               {hour}:00
             </div>

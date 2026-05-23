@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { logout } from "../../lib/firebase/auth";
 import { useAuth } from "../../lib/hooks/useAuth";
+import { canAccessDashboardRoute } from "../../lib/utils/accessControl";
 import { AppLogo } from "./AppLogo";
 
 const items = [
@@ -35,6 +36,7 @@ const items = [
 export const Sidebar = (): JSX.Element => {
   const pathname = usePathname();
   const { user } = useAuth();
+  const visibleItems = items.filter((item) => canAccessDashboardRoute(user?.role, item.href));
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-clinic-border bg-clinic-surface md:flex md:flex-col">
@@ -43,7 +45,7 @@ export const Sidebar = (): JSX.Element => {
         <span className="font-semibold text-clinic-text">Dr. Agenda</span>
       </div>
       <nav className="grid flex-1 content-start gap-1 p-3">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const active = pathname.startsWith(item.href);
           const Icon = item.icon;
           return (
