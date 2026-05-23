@@ -21,7 +21,7 @@ const copyByMethod = {
   boleto: {
     badge: "Boleto bancário",
     title: "Continue com boleto",
-    description: "Você será levado para a página de pagamento do Asaas e poderá continuar depois.",
+    description: "Você será levado para a página de pagamento do Asaas para concluir a assinatura.",
     retryLabel: "Tentar novamente",
     endpoint: "/api/asaas/public-boleto-subscription",
     Icon: FileText,

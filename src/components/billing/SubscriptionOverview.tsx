@@ -37,7 +37,7 @@ type SubscriptionResponse = {
 };
 
 const statusLabel: Record<BillingAccessView["status"], string> = {
-  trialing: "Teste grátis",
+  trialing: "Aguardando pagamento",
   active: "Ativa",
   past_due: "Pagamento pendente",
   cancelled: "Cancelada",
@@ -144,7 +144,7 @@ export const SubscriptionOverview = (): JSX.Element => {
   const headline = data?.access.master === true
     ? "Acesso Master liberado"
     : currentStatus === "trialing"
-      ? "Teste grátis ativo"
+      ? "Assinatura em andamento"
       : currentStatus === "active"
         ? "Assinatura ativa"
         : "Escolha sua assinatura";
@@ -161,7 +161,7 @@ export const SubscriptionOverview = (): JSX.Element => {
     "Médicos, pacientes e equipe no mesmo lugar",
     "Relatórios para acompanhar a operação",
     "Financeiro e comprovantes organizados",
-    "Cadastros preservados após o teste grátis",
+    "Cadastros preservados após a confirmação",
     "Acesso mensal por R$ 99,90",
   ];
 
@@ -226,7 +226,7 @@ export const SubscriptionOverview = (): JSX.Element => {
                     </div>
                     {trialEndsAt !== null ? (
                       <div className="rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3">
-                        <p className="text-sm font-bold text-slate-800">Teste grátis até</p>
+                        <p className="text-sm font-bold text-slate-800">Pagamento em aberto até</p>
                         <p className="mt-1 text-sm text-slate-600">{formatDisplayDate(trialEndsAt)}</p>
                       </div>
                     ) : null}

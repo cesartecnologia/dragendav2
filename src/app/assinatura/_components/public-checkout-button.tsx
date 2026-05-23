@@ -65,7 +65,7 @@ export const PublicCheckoutButton = ({
   const variantClass =
     variant === "outline"
       ? "border border-sky-200 bg-white text-sky-900 hover:bg-sky-50"
-      : "bg-slate-950 text-white hover:bg-slate-800";
+      : "bg-sky-600 text-white shadow-lg shadow-sky-900/15 hover:bg-sky-700";
 
   return (
     <button
