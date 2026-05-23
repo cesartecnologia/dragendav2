@@ -68,11 +68,11 @@ const PatientProfilePage = (): JSX.Element => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/appointments?modal=new" className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-clinic-primary px-4 text-sm font-medium text-white">
+            <Link href="/agendamentos?modal=new" className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-clinic-primary px-4 text-sm font-medium text-white">
               <CalendarPlus className="h-4 w-4" />
               Novo agendamento
             </Link>
-            <Link href={`/patients/${patientData.id}/edit`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-clinic-border bg-clinic-surface px-4 text-sm font-medium text-clinic-text">
+            <Link href={`/pacientes/${patientData.id}/editar`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-clinic-border bg-clinic-surface px-4 text-sm font-medium text-clinic-text">
               <Edit className="h-4 w-4" />
               Editar
             </Link>
@@ -126,7 +126,7 @@ const PatientProfilePage = (): JSX.Element => {
           deletePatient.mutate(patientData.id, {
             onSuccess: () => {
               pushToast({ type: "success", title: "Paciente excluído", description: "Cadastro desativado com sucesso." });
-              router.push("/patients");
+              router.push("/pacientes");
             },
             onError: () => pushToast({ type: "error", title: "Erro ao excluir", description: "Não foi possível excluir o paciente." }),
           })

@@ -1,13 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const protectedPrefixes = [
-  "/dashboard",
-  "/appointments",
-  "/patients",
-  "/doctors",
-  "/financial",
-  "/reports",
-  "/settings",
+  "/painel",
+  "/agendamentos",
+  "/pacientes",
+  "/medicos",
+  "/financeiro",
+  "/relatorios",
+  "/funcionarios",
+  "/configuracoes",
+  "/minha-assinatura",
 ];
 
 export const proxy = (request: NextRequest): NextResponse => {
@@ -37,19 +39,23 @@ export const proxy = (request: NextRequest): NextResponse => {
 
 export const config = {
   matcher: [
-    "/dashboard",
-    "/dashboard/:path*",
-    "/appointments",
-    "/appointments/:path*",
-    "/patients",
-    "/patients/:path*",
-    "/doctors",
-    "/doctors/:path*",
-    "/financial",
-    "/financial/:path*",
-    "/reports",
-    "/reports/:path*",
-    "/settings",
-    "/settings/:path*",
+    "/painel",
+    "/painel/:path*",
+    "/agendamentos",
+    "/agendamentos/:path*",
+    "/pacientes",
+    "/pacientes/:path*",
+    "/medicos",
+    "/medicos/:path*",
+    "/financeiro",
+    "/financeiro/:path*",
+    "/relatorios",
+    "/relatorios/:path*",
+    "/funcionarios",
+    "/funcionarios/:path*",
+    "/configuracoes",
+    "/configuracoes/:path*",
+    "/minha-assinatura",
+    "/minha-assinatura/:path*",
   ],
 };

@@ -26,10 +26,10 @@ const PatientsPage = (): JSX.Element => {
 
   return (
     <div className="grid gap-6">
-      <PageHeader title="Pacientes" description="Cadastro, busca e histórico clínico." actionHref="/patients/new" actionLabel="Novo paciente" actionIcon={Plus} />
+      <PageHeader title="Pacientes" description="Cadastro, busca e histórico clínico." actionHref="/pacientes/novo" actionLabel="Novo paciente" actionIcon={Plus} />
       {isLoading ? <LoadingSkeleton /> : null}
       {error !== null ? <EmptyState title="Erro ao carregar pacientes" description={error.message} /> : null}
-      {!isLoading && error === null && patients.length === 0 ? <EmptyState title="Nenhum paciente" description="Cadastre o primeiro paciente da clínica." actionHref="/patients/new" actionLabel="Novo paciente" /> : null}
+      {!isLoading && error === null && patients.length === 0 ? <EmptyState title="Nenhum paciente" description="Cadastre o primeiro paciente da clínica." actionHref="/pacientes/novo" actionLabel="Novo paciente" /> : null}
       <div className="grid gap-4 md:grid-cols-3">{paginatedPatients.map((patient) => <PatientCard key={patient.id} patient={patient} />)}</div>
       <PageSelector
         currentPage={safePage}

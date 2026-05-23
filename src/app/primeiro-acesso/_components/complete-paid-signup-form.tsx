@@ -130,7 +130,7 @@ export const CompletePaidSignupForm = ({
       setFirebaseUser(result.user);
       setUser(user);
       setLoading(false);
-      router.push("/dashboard");
+      router.push("/painel");
     } catch (error: unknown) {
       setError("root", {
         message:

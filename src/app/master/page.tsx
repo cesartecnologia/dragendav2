@@ -87,7 +87,7 @@ const MasterPage = (): JSX.Element => {
       setFirebaseUser(authResult.user);
       setUser(user);
       setLoading(false);
-      router.push("/dashboard");
+      router.push("/painel");
     } catch (error: unknown) {
       setError("root", {
         message:

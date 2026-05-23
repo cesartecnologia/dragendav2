@@ -53,11 +53,11 @@ const DoctorProfilePage = (): JSX.Element => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/doctors/${data.id}/schedule`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-clinic-primary px-4 text-sm font-medium text-white">
+            <Link href={`/medicos/${data.id}/agenda`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-clinic-primary px-4 text-sm font-medium text-white">
               <CalendarDays className="h-4 w-4" />
               Agenda
             </Link>
-            <Link href={`/doctors/${data.id}/edit`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-clinic-border bg-clinic-surface px-4 text-sm font-medium text-clinic-text">
+            <Link href={`/medicos/${data.id}/editar`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-clinic-border bg-clinic-surface px-4 text-sm font-medium text-clinic-text">
               <Edit className="h-4 w-4" />
               Editar
             </Link>
@@ -110,7 +110,7 @@ const DoctorProfilePage = (): JSX.Element => {
           deleteDoctor.mutate(data.id, {
             onSuccess: () => {
               pushToast({ type: "success", title: "Médico excluído", description: "Cadastro desativado com sucesso." });
-              router.push("/doctors");
+              router.push("/medicos");
             },
             onError: () => pushToast({ type: "error", title: "Erro ao excluir", description: "Não foi possível excluir o médico." }),
           })

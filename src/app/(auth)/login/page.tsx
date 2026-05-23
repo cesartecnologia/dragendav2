@@ -67,7 +67,7 @@ const LoginPage = (): JSX.Element => {
       setFirebaseUser(result.user);
       setLoading(false);
       const params = new URLSearchParams(window.location.search);
-      router.push(params.get("redirect") ?? "/dashboard");
+      router.push(params.get("redirect") ?? "/painel");
     } catch (error: unknown) {
       setError("root", { message: getAuthErrorMessage(error) });
     }

@@ -41,7 +41,7 @@ export const ListView = ({
   }
 
   if (appointments.length === 0) {
-    return <EmptyState title="Nenhum agendamento" description="Crie um novo agendamento para começar." actionHref="/appointments?modal=new" actionLabel="Novo agendamento" />;
+    return <EmptyState title="Nenhum agendamento" description="Crie um novo agendamento para começar." actionHref="/agendamentos?modal=new" actionLabel="Novo agendamento" />;
   }
 
   return (

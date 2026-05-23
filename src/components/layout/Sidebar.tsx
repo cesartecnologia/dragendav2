@@ -21,16 +21,16 @@ import { canAccessDashboardRoute } from "../../lib/utils/accessControl";
 import { AppLogo } from "./AppLogo";
 
 const items = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/appointments", label: "Agenda", icon: CalendarDays },
-  { href: "/patients", label: "Pacientes", icon: Users },
-  { href: "/doctors", label: "Médicos", icon: Stethoscope },
-  { href: "/settings/exams", label: "Exames", icon: FlaskConical },
-  { href: "/financial", label: "Financeiro", icon: Wallet },
-  { href: "/reports", label: "Relatórios", icon: ChartNoAxesCombined },
-  { href: "/users", label: "Funcionários", icon: UserCircle },
-  { href: "/settings/company", label: "Clínica", icon: Building2 },
-  { href: "/subscription", label: "Assinatura", icon: CreditCard },
+  { href: "/painel", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/agendamentos", label: "Agenda", icon: CalendarDays },
+  { href: "/pacientes", label: "Pacientes", icon: Users },
+  { href: "/medicos", label: "Médicos", icon: Stethoscope },
+  { href: "/configuracoes/exames", label: "Exames", icon: FlaskConical },
+  { href: "/financeiro", label: "Financeiro", icon: Wallet },
+  { href: "/relatorios", label: "Relatórios", icon: ChartNoAxesCombined },
+  { href: "/funcionarios", label: "Funcionários", icon: UserCircle },
+  { href: "/configuracoes/clinica", label: "Clínica", icon: Building2 },
+  { href: "/minha-assinatura", label: "Assinatura", icon: CreditCard },
 ];
 
 export const Sidebar = (): JSX.Element => {

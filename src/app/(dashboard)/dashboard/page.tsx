@@ -279,7 +279,7 @@ const DashboardPage = (): JSX.Element => {
         {appointments.isLoading ? <LoadingSkeleton count={4} /> : null}
         {appointments.error !== null ? <EmptyState title="Erro ao carregar agenda" description={appointments.error.message} /> : null}
         {!appointments.isLoading && appointments.error === null && activeData.length === 0 ? (
-          <EmptyState title="Sem agendamentos no mês" description="A agenda do mês ainda está livre." actionHref="/appointments" actionLabel="Abrir agenda" />
+          <EmptyState title="Sem agendamentos no mês" description="A agenda do mês ainda está livre." actionHref="/agendamentos" actionLabel="Abrir agenda" />
         ) : null}
         <div className="grid gap-3 md:grid-cols-2">
           {activeData.slice(0, 4).map((appointment) => (

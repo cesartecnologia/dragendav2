@@ -62,7 +62,7 @@ export const DashboardAuthGate = ({
     }
 
     if (!canAccessDashboardRoute(user.role, pathname)) {
-      router.replace("/dashboard");
+      router.replace("/painel");
       setSubscriptionLoading(false);
       return;
     }

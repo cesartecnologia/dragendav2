@@ -45,7 +45,7 @@ const DoctorEditPage = (): JSX.Element => {
         onSubmit={async (values) => {
           await updateDoctor.mutateAsync({ id: doctorData.id, data: values });
           pushToast({ type: "success", title: "Médico atualizado", description: "Dados salvos com sucesso." });
-          router.push(`/doctors/${doctorData.id}`);
+          router.push(`/medicos/${doctorData.id}`);
         }}
       />
     </div>

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 const SettingsUsersPage = (): never => {
-  redirect("/users");
+  redirect("/funcionarios");
 };
 
 export default SettingsUsersPage;

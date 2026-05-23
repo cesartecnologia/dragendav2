@@ -13,7 +13,7 @@ export type PatientCardProps = {
 
 export const PatientCard = ({ patient }: PatientCardProps): JSX.Element => {
   return (
-    <Link href={`/patients/${patient.id}`} className="block rounded-md border border-clinic-border bg-clinic-surface p-3 transition hover:border-clinic-primary/50 hover:shadow-sm">
+    <Link href={`/pacientes/${patient.id}`} className="block rounded-md border border-clinic-border bg-clinic-surface p-3 transition hover:border-clinic-primary/50 hover:shadow-sm">
       <div className="flex items-center gap-3">
         <div className="rounded-md bg-clinic-bg p-3 text-clinic-primary">
           <User className="h-5 w-5" />

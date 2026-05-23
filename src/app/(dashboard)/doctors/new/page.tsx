@@ -34,7 +34,7 @@ const NewDoctorPage = (): JSX.Element => {
   return (
     <div className="grid gap-6">
       <PageHeader title="Novo médico" description="Cadastre dados profissionais e contato." />
-      <DoctorForm clinicId={clinicId} specialties={specialties.data?.map((item) => item.name) ?? []} defaultValues={defaultValues} isPending={mutation.isPending} onSubmit={async (values) => { await mutation.mutateAsync(values); router.push("/doctors"); }} />
+      <DoctorForm clinicId={clinicId} specialties={specialties.data?.map((item) => item.name) ?? []} defaultValues={defaultValues} isPending={mutation.isPending} onSubmit={async (values) => { await mutation.mutateAsync(values); router.push("/medicos"); }} />
     </div>
   );
 };

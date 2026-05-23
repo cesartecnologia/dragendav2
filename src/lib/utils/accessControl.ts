@@ -1,12 +1,12 @@
 import type { Role } from "../types";
 
 const receptionistBlockedRoutes = [
-  "/financial",
-  "/reports",
-  "/users",
-  "/settings/company",
-  "/settings/billing",
-  "/subscription",
+  "/financeiro",
+  "/relatorios",
+  "/funcionarios",
+  "/configuracoes/clinica",
+  "/configuracoes/cobranca",
+  "/minha-assinatura",
 ] as const;
 
 export const canAccessDashboardRoute = (

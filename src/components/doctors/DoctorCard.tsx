@@ -15,7 +15,7 @@ export const DoctorCard = ({ doctor }: DoctorCardProps): JSX.Element => {
 
   return (
     <Link
-      href={`/doctors/${doctor.id}`}
+      href={`/medicos/${doctor.id}`}
       className="rounded-md border border-l-8 border-clinic-border bg-clinic-surface p-5 transition hover:border-clinic-primary/40 hover:shadow-sm"
       style={{ borderLeftColor: specialtyColor.border }}
     >

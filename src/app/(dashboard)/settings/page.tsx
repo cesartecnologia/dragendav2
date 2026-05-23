@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 const SettingsPage = (): never => {
-  redirect("/settings/company");
+  redirect("/configuracoes/clinica");
 };
 
 export default SettingsPage;

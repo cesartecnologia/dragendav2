@@ -29,11 +29,11 @@ const DoctorsPage = (): JSX.Element => {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <PageHeader title="Médicos" description="Equipe médica, CRM, especialidade e agenda." />
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Link href="/settings/specialties" className="inline-flex items-center justify-center gap-2 rounded-md border border-clinic-border bg-clinic-surface px-4 py-2 text-sm font-medium text-clinic-text">
+          <Link href="/configuracoes/especialidades" className="inline-flex items-center justify-center gap-2 rounded-md border border-clinic-border bg-clinic-surface px-4 py-2 text-sm font-medium text-clinic-text">
             <Tags className="h-4 w-4 text-clinic-primary" />
             Especialidades
           </Link>
-          <Link href="/doctors/new" className="inline-flex items-center justify-center gap-2 rounded-md bg-clinic-primary px-4 py-2 text-sm font-medium text-white">
+          <Link href="/medicos/novo" className="inline-flex items-center justify-center gap-2 rounded-md bg-clinic-primary px-4 py-2 text-sm font-medium text-white">
             <Plus className="h-4 w-4" />
             Novo médico
           </Link>
@@ -41,7 +41,7 @@ const DoctorsPage = (): JSX.Element => {
       </div>
       {isLoading ? <LoadingSkeleton variant="card" /> : null}
       {error !== null ? <EmptyState title="Erro ao carregar médicos" description={error.message} /> : null}
-      {!isLoading && error === null && data.length === 0 ? <EmptyState title="Nenhum médico" description="Cadastre o primeiro médico da clínica." actionHref="/doctors/new" actionLabel="Novo médico" /> : null}
+      {!isLoading && error === null && data.length === 0 ? <EmptyState title="Nenhum médico" description="Cadastre o primeiro médico da clínica." actionHref="/medicos/novo" actionLabel="Novo médico" /> : null}
       <div className="grid gap-4 md:grid-cols-3">{paginatedDoctors.map((doctor) => <DoctorCard key={doctor.id} doctor={doctor} />)}</div>
       <PageSelector
         currentPage={safePage}

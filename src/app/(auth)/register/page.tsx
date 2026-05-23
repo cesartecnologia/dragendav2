@@ -111,7 +111,7 @@ const RegisterPage = (): JSX.Element => {
       });
       setFirebaseUser(result.user);
       setLoading(false);
-      router.push("/dashboard");
+      router.push("/painel");
     } catch (error: unknown) {
       setError("root", {
         message:

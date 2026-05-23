@@ -37,7 +37,7 @@ const NewPatientPage = (): JSX.Element => {
   return (
     <div className="grid gap-6">
       <PageHeader title="Novo paciente" description="Cadastre dados pessoais, contato e endereço." />
-      <PatientForm defaultValues={defaultValues} isPending={mutation.isPending} onSubmit={async (values) => { await mutation.mutateAsync({ ...values, healthInsurance: "" }); router.push("/patients"); }} />
+      <PatientForm defaultValues={defaultValues} isPending={mutation.isPending} onSubmit={async (values) => { await mutation.mutateAsync({ ...values, healthInsurance: "" }); router.push("/pacientes"); }} />
     </div>
   );
 };
