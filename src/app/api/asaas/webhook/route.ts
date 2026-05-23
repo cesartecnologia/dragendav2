@@ -37,6 +37,10 @@ const isAuthorized = (request: NextRequest): boolean => {
   return accessToken === expectedToken || authorization === `Bearer ${expectedToken}`;
 };
 
+export const GET = async (): Promise<NextResponse> => {
+  return NextResponse.json({ ok: true, service: "asaas-webhook" });
+};
+
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
   try {
     if (!isAuthorized(request)) {
@@ -47,8 +51,8 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
 
     if (!isAsaasWebhookPayload(payload)) {
       return NextResponse.json(
-        { message: "Evento inválido" },
-        { status: 400 },
+        { received: true, ignored: true, message: "Evento inválido" },
+        { status: 200 },
       );
     }
 
@@ -58,6 +62,8 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
         checkoutStatus: payload.checkout.status,
         customerId: payload.checkout.customer,
         subscriptionId: payload.checkout.subscription,
+      }).catch((error: unknown) => {
+        console.error("ASAAS_CHECKOUT_WEBHOOK_PROCESSING_FAILED", error);
       });
     }
 
@@ -73,13 +79,18 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
         invoiceUrl: payload.payment.invoiceUrl ?? payload.payment.bankSlipUrl,
         billingType: payload.payment.billingType,
         value: payload.payment.value,
+      }).catch((error: unknown) => {
+        console.error("ASAAS_PAYMENT_WEBHOOK_PROCESSING_FAILED", error);
       });
     }
 
-    await processAsaasWebhook(payload);
+    await processAsaasWebhook(payload).catch((error: unknown) => {
+      console.error("ASAAS_SUBSCRIPTION_WEBHOOK_PROCESSING_FAILED", error);
+    });
 
     return NextResponse.json({ received: true });
-  } catch {
+  } catch (error: unknown) {
+    console.error("ASAAS_WEBHOOK_FAILED", error);
     return NextResponse.json(
       { message: "Erro ao processar evento do Asaas" },
       { status: 500 },

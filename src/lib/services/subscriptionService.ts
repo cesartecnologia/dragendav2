@@ -252,13 +252,7 @@ const getProviderEventId = (payload: AsaasWebhookPayload): string => {
 const getAsaasCallbackBaseUrl = (requestBaseUrl: string): string => {
   const configuredUrl =
     process.env.ASAAS_CHECKOUT_CALLBACK_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? requestBaseUrl;
-  const normalizedUrl = configuredUrl.replace(/\/$/, "");
-
-  if (normalizedUrl.startsWith("http://localhost") || normalizedUrl.startsWith("http://127.0.0.1")) {
-    return "https://dragenda.cesartecnologia.com";
-  }
-
-  return normalizedUrl;
+  return configuredUrl.replace(/\/$/, "");
 };
 
 const formatAsaasDateTime = (date: Date): string => {
