@@ -109,7 +109,7 @@ export const createDoctor = async (
           crm: data.crm,
           specialty: data.specialty,
           phone: data.phone,
-          email: data.email,
+          email: data.email ?? "",
           photoUrl: data.photoUrl ?? "",
           photoPublicId: data.photoPublicId ?? "",
           consultationPrice: data.consultationPrice ?? 0,

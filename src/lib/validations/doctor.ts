@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const optionalEmailSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() : ""),
+  z.string().email("Email inválido").or(z.literal("")),
+);
+
 export const workDaySchema = z.object({
   weekday: z.union([
     z.literal(0),
@@ -43,7 +48,7 @@ export const doctorSchema = z.object({
   crm: z.string().min(4, "Informe um CRM válido"),
   specialty: z.string().min(1, "Selecione a especialidade"),
   phone: z.string().min(10, "Informe um telefone válido"),
-  email: z.string().email("Email inválido").or(z.literal("")),
+  email: optionalEmailSchema,
   photoUrl: z.string().url("URL da foto inválida").or(z.literal("")),
   photoPublicId: z.string(),
   consultationPrice: z.coerce.number().min(0, "Informe o valor da consulta"),

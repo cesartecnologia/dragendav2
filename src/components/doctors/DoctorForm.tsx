@@ -84,7 +84,11 @@ export const DoctorForm = ({
           ) : null}
         </label>
         <PhoneInput id="doctor-phone" label="Telefone" value={watch("phone")} onChange={(value) => setValue("phone", value)} error={errors.phone?.message} />
-        <label className="grid gap-1 text-sm">Email<input type="email" {...register("email")} className="rounded-md border px-3 py-2" /></label>
+        <label className="grid gap-1 text-sm">
+          Email (opcional)
+          <input type="email" {...register("email")} className="rounded-md border px-3 py-2" />
+          {errors.email?.message !== undefined ? <span className="text-xs text-clinic-danger">{errors.email.message}</span> : null}
+        </label>
         <MoneyInput
           id="consultationPrice"
           label="Valor da consulta"
