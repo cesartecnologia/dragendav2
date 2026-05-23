@@ -176,10 +176,10 @@ const DashboardPage = (): JSX.Element => {
 
   return (
     <div className="grid gap-5">
-      <div className="rounded-lg border border-clinic-border bg-clinic-surface p-5 shadow-sm">
+      <div className="rounded-lg border border-clinic-border bg-clinic-surface p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-normal text-clinic-text md:text-4xl">
+            <h1 className="text-2xl font-semibold tracking-normal text-clinic-text sm:text-3xl md:text-4xl">
               Olá, {displayName}! <span aria-hidden="true">👋</span>
             </h1>
             <p className="mt-2 text-base text-clinic-muted">
@@ -206,27 +206,27 @@ const DashboardPage = (): JSX.Element => {
           <p className="text-sm text-clinic-muted">
             Operação mensal da clínica em {format(selectedMonthDate, "MM/yyyy")}
           </p>
-          <label className="flex items-center gap-3 text-sm font-medium text-clinic-muted">
+          <label className="flex flex-col gap-2 text-sm font-medium text-clinic-muted sm:flex-row sm:items-center sm:gap-3">
             <span>Mês</span>
             <input
               type="month"
               value={selectedMonth}
               onChange={(event) => setSelectedMonth(event.target.value)}
-              className="w-44 rounded-md border border-clinic-border bg-clinic-surface px-3 py-2 text-clinic-text"
+              className="w-full rounded-md border border-clinic-border bg-clinic-surface px-3 py-2 text-clinic-text sm:w-44"
             />
           </label>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((item) => {
           const Icon = item.icon;
           return (
-            <div key={item.label} className="rounded-lg border border-clinic-border bg-clinic-surface p-5 shadow-sm">
+            <div key={item.label} className="rounded-lg border border-clinic-border bg-clinic-surface p-4 shadow-sm sm:p-5">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-clinic-muted">{item.label}</p>
                 <Icon className={`h-5 w-5 ${item.tone}`} />
               </div>
-              <p className="mt-8 text-4xl font-semibold text-clinic-text">{item.value}</p>
+              <p className="mt-6 text-3xl font-semibold text-clinic-text sm:mt-8 sm:text-4xl">{item.value}</p>
               <p className={`mt-2 text-sm ${item.value >= item.previous ? "text-clinic-success" : "text-clinic-danger"}`}>
                 {compare(item.value, item.previous)}
               </p>
@@ -235,12 +235,12 @@ const DashboardPage = (): JSX.Element => {
         })}
       </div>
       <div className="grid gap-4 lg:grid-cols-[1.4fr_0.9fr]">
-        <section className="rounded-lg border border-clinic-border bg-clinic-surface p-5 shadow-sm">
+        <section className="rounded-lg border border-clinic-border bg-clinic-surface p-4 shadow-sm sm:p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-clinic-text">Fluxo de atendimentos</h2>
             <Clock3 className="h-5 w-5 text-clinic-primary" />
           </div>
-          <div className="mt-8 grid h-64 grid-cols-6 items-end gap-3">
+          <div className="mt-6 grid h-56 grid-cols-6 items-end gap-2 sm:mt-8 sm:h-64 sm:gap-3">
             {weekdayData.map((item) => (
               <div key={item.label} className="group relative flex h-full flex-col justify-end gap-2">
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-clinic-text px-3 py-2 text-xs text-white shadow-lg group-hover:block">
@@ -259,13 +259,13 @@ const DashboardPage = (): JSX.Element => {
             ))}
           </div>
         </section>
-        <section className="rounded-lg border border-clinic-border bg-clinic-surface p-5 shadow-sm">
+        <section className="rounded-lg border border-clinic-border bg-clinic-surface p-4 shadow-sm sm:p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-clinic-text">Resumo de presença</h2>
             <UserRound className="h-5 w-5 text-clinic-secondary" />
           </div>
           <div className="mt-8 flex items-center justify-center">
-            <div className="flex h-48 w-48 items-center justify-center rounded-full border-[18px] border-clinic-success/30">
+            <div className="flex h-40 w-40 items-center justify-center rounded-full border-[14px] border-clinic-success/30 sm:h-48 sm:w-48 sm:border-[18px]">
               <div className="text-center">
                 <p className="text-4xl font-semibold text-clinic-text">{activeData.length === 0 ? 0 : Math.round((confirmed / activeData.length) * 100)}%</p>
                 <p className="text-sm text-clinic-muted">confirmados</p>
@@ -281,7 +281,7 @@ const DashboardPage = (): JSX.Element => {
         {!appointments.isLoading && appointments.error === null && activeData.length === 0 ? (
           <EmptyState title="Sem agendamentos no mês" description="A agenda do mês ainda está livre." actionHref="/agendamentos" actionLabel="Abrir agenda" />
         ) : null}
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           {activeData.slice(0, 4).map((appointment) => (
             <AppointmentCard key={appointment.id} appointment={appointment} />
           ))}

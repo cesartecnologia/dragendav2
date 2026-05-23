@@ -12,8 +12,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps): JSX.Element => {
     <DashboardAuthGate>
       <div className="min-h-screen bg-clinic-bg">
         <Sidebar />
-        <div className="md:pl-60">
-          <main className="mx-auto max-w-7xl px-4 py-4 md:px-6">
+        <div className="lg:pl-60">
+          <main className="mx-auto max-w-7xl px-3 pb-28 pt-3 sm:px-4 sm:py-4 lg:px-6 lg:pb-6">
             <ErrorBoundary>{children}</ErrorBoundary>
           </main>
         </div>

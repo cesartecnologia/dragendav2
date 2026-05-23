@@ -69,7 +69,7 @@ const FinancialPage = (): JSX.Element => {
           <DateRangePicker value={dateRange} onChange={setDateRange} />
         </div>
       ) : null}
-      <div className="grid gap-2 rounded-md border border-clinic-border bg-clinic-surface p-2 sm:grid-cols-4">
+      <div className="grid gap-2 rounded-md border border-clinic-border bg-clinic-surface p-2 sm:grid-cols-2 lg:grid-cols-4">
         {[["overview", "Visão geral"], ["entries", "Lançamentos"], ["insurances", "Convênios"], ["pending", "Inadimplência"]].map(([value, label]) => (
           <button key={value} type="button" onClick={() => setTab(value as "overview" | "entries" | "insurances" | "pending")} className={`rounded-md px-3 py-2 text-sm ${tab === value ? "bg-clinic-primary text-white" : "text-clinic-muted hover:bg-clinic-bg hover:text-clinic-text"}`}>{label}</button>
         ))}
@@ -114,7 +114,7 @@ const FinancialPage = (): JSX.Element => {
               }}
             />
           </section>
-          <section className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {paginatedInsurances.map((insurance) => <InsuranceCard key={insurance.id} insurance={insurance} />)}
           </section>
           <PageSelector

@@ -43,7 +43,7 @@ export const PatientForm = ({ defaultValues, isPending, onSubmit }: PatientFormP
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5 rounded-md border border-clinic-border bg-clinic-surface p-4">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1 text-sm">
           Nome
           <input {...register("name")} className="rounded-md border px-3 py-2" />
@@ -64,9 +64,9 @@ export const PatientForm = ({ defaultValues, isPending, onSubmit }: PatientFormP
         </label>
         <label className="grid gap-1 text-sm">{optionalLabel("Gênero")}<select {...register("gender")} className="rounded-md border px-3 py-2"><option value="M">Masculino</option><option value="F">Feminino</option><option value="O">Outro</option></select></label>
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <CepInput id="cep" label="CEP (opcional)" value={watch("address.cep")} onChange={(value) => setValue("address.cep", value)} onBlur={loadCep} error={errors.address?.cep?.message} />
-        <label className="grid gap-1 text-sm md:col-span-2">{optionalLabel("Rua")}<input {...register("address.street")} className="rounded-md border px-3 py-2" /></label>
+        <label className="grid gap-1 text-sm sm:col-span-2">{optionalLabel("Rua")}<input {...register("address.street")} className="rounded-md border px-3 py-2" /></label>
         <label className="grid gap-1 text-sm">{optionalLabel("Número")}<input {...register("address.number")} className="rounded-md border px-3 py-2" /></label>
         <label className="grid gap-1 text-sm">{optionalLabel("Complemento")}<input {...register("address.complement")} className="rounded-md border px-3 py-2" /></label>
         <label className="grid gap-1 text-sm">{optionalLabel("Bairro")}<input {...register("address.neighborhood")} className="rounded-md border px-3 py-2" /></label>

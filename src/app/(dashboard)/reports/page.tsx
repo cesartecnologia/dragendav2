@@ -77,7 +77,7 @@ const ReportsPage = (): JSX.Element => {
         <ReportFilters dateRange={dateRange} onDateRangeChange={setDateRange} />
         </div>
       ) : null}
-      <div className="grid gap-3 rounded-md border border-clinic-border bg-clinic-surface p-3 md:grid-cols-3">
+      <div className="grid gap-3 rounded-md border border-clinic-border bg-clinic-surface p-3 sm:grid-cols-3">
         {[
           { value: "financial", label: "Financeiro", icon: TrendingUp },
           { value: "doctors", label: "Produção médica", icon: BarChart3 },
@@ -92,12 +92,12 @@ const ReportsPage = (): JSX.Element => {
           );
         })}
       </div>
-      <div className="grid gap-3 rounded-md border border-clinic-border bg-clinic-surface p-4 md:grid-cols-[1fr_auto] md:items-center">
+      <div className="grid gap-3 rounded-md border border-clinic-border bg-clinic-surface p-4 sm:grid-cols-[1fr_auto] sm:items-center">
         <div>
           <p className="text-sm text-clinic-muted">Relatório</p>
           <p className="text-lg font-semibold text-clinic-text">{report.data?.title ?? "-"}</p>
         </div>
-        <div className="flex gap-2 md:justify-end">
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <ExportButton
             label="Exportar PDF"
             isPending={false}

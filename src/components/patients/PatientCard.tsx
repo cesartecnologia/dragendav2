@@ -18,7 +18,7 @@ export const PatientCard = ({ patient }: PatientCardProps): JSX.Element => {
         <div className="rounded-md bg-clinic-bg p-3 text-clinic-primary">
           <User className="h-5 w-5" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h3 className="font-semibold text-clinic-text">{patient.name}</h3>
           <p className="text-sm text-clinic-muted">{patient.active ? "Ativo" : "Inativo"}</p>
         </div>

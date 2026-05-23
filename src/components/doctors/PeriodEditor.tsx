@@ -44,9 +44,9 @@ export const PeriodEditor = ({
       {value.map((period) => (
         <div
           key={period.id}
-          className="grid gap-3 rounded-md border border-clinic-border p-3 md:grid-cols-12"
+          className="grid gap-3 rounded-md border border-clinic-border p-3 sm:grid-cols-2 lg:grid-cols-12"
         >
-          <label className="grid gap-1 text-sm md:col-span-2">
+          <label className="grid gap-1 text-sm lg:col-span-2">
             Início
             <input
               type="date"
@@ -57,7 +57,7 @@ export const PeriodEditor = ({
               className="rounded-md border px-3 py-2"
             />
           </label>
-          <label className="grid gap-1 text-sm md:col-span-2">
+          <label className="grid gap-1 text-sm lg:col-span-2">
             Fim
             <input
               type="date"
@@ -68,7 +68,7 @@ export const PeriodEditor = ({
               className="rounded-md border px-3 py-2"
             />
           </label>
-          <label className="grid gap-1 text-sm md:col-span-2">
+          <label className="grid gap-1 text-sm lg:col-span-2">
             Entrada
             <input
               type="time"
@@ -79,7 +79,7 @@ export const PeriodEditor = ({
               className="rounded-md border px-3 py-2"
             />
           </label>
-          <label className="grid gap-1 text-sm md:col-span-2">
+          <label className="grid gap-1 text-sm lg:col-span-2">
             Saída
             <input
               type="time"
@@ -90,7 +90,7 @@ export const PeriodEditor = ({
               className="rounded-md border px-3 py-2"
             />
           </label>
-          <label className="grid gap-1 text-sm md:col-span-2">
+          <label className="grid gap-1 text-sm lg:col-span-2">
             Duração da consulta (min)
             <input
               type="number"
@@ -101,7 +101,7 @@ export const PeriodEditor = ({
               className="rounded-md border px-3 py-2"
             />
           </label>
-          <label className="grid gap-1 text-sm md:col-span-1">
+          <label className="grid gap-1 text-sm lg:col-span-1">
             Pacientes por horário
             <input
               type="number"
@@ -115,7 +115,7 @@ export const PeriodEditor = ({
           <button
             type="button"
             onClick={() => onChange(value.filter((item) => item.id !== period.id))}
-            className="mt-6 inline-flex items-center justify-center rounded-md border border-clinic-border p-2 text-clinic-danger md:col-span-1"
+            className="inline-flex items-center justify-center rounded-md border border-clinic-border p-2 text-clinic-danger sm:mt-6 lg:col-span-1"
             aria-label="Remover período"
           >
             <Trash2 className="h-4 w-4" />

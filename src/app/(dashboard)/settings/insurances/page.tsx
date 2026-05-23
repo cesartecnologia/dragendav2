@@ -45,7 +45,7 @@ const InsurancesSettingsPage = (): JSX.Element => {
       {isLoading ? <div className="h-32 animate-pulse rounded-md bg-clinic-border" /> : null}
       {error !== null ? <EmptyState title="Erro ao carregar convênios" description={error.message} /> : null}
       {!isLoading && error === null && data.length === 0 ? <EmptyState title="Nenhum convênio" description="Cadastre os convênios atendidos pela clínica." /> : null}
-      <div className="grid gap-4 md:grid-cols-3">{paginatedInsurances.map((insurance) => <InsuranceCard key={insurance.id} insurance={insurance} />)}</div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{paginatedInsurances.map((insurance) => <InsuranceCard key={insurance.id} insurance={insurance} />)}</div>
       <PageSelector
         currentPage={safePage}
         totalPages={totalPages}

@@ -62,7 +62,8 @@ export const DataTable = <T extends object>({
   return (
     <div className="grid gap-3">
       <div className="overflow-hidden rounded-md border border-clinic-border bg-clinic-surface">
-        <table className="hidden w-full border-collapse text-sm md:table">
+        <div className="hidden overflow-x-auto md:block">
+        <table className="min-w-full border-collapse text-sm">
           <thead className="bg-clinic-bg text-left text-clinic-muted">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -91,11 +92,12 @@ export const DataTable = <T extends object>({
             ))}
           </tbody>
         </table>
+        </div>
         <div className="divide-y divide-clinic-border md:hidden">
           {table.getRowModel().rows.map((row) => (
-            <div key={row.id} className="space-y-2 p-4">
+            <div key={row.id} className="space-y-2 p-3">
               {row.getVisibleCells().slice(0, 4).map((cell) => (
-                <div key={cell.id} className="text-sm text-clinic-text">
+                <div key={cell.id} className="min-w-0 break-words text-sm text-clinic-text">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </div>
               ))}

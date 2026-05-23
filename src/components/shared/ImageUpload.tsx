@@ -186,8 +186,8 @@ export const ImageUpload = ({
       </div>
       {error !== null ? <span className="text-xs text-clinic-danger">{error}</span> : null}
       {pendingFile !== null ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={() => setPendingFile(null)} role="presentation">
-          <div className="w-full max-w-lg rounded-md bg-clinic-surface p-5 shadow-xl" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onMouseDown={() => setPendingFile(null)} role="presentation">
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-lg bg-clinic-surface p-4 shadow-xl sm:rounded-md sm:p-5" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold text-clinic-text">Ajustar imagem</h2>
@@ -197,8 +197,8 @@ export const ImageUpload = ({
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-[240px_1fr]">
-              <div className="relative h-60 w-60 overflow-hidden rounded-md border border-clinic-border bg-clinic-bg">
+            <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(180px,240px)_1fr]">
+              <div className="relative aspect-square w-full overflow-hidden rounded-md border border-clinic-border bg-clinic-bg">
                 {previewUrl.length > 0 ? (
                   <img
                     src={previewUrl}
@@ -226,7 +226,7 @@ export const ImageUpload = ({
                 </label>
               </div>
             </div>
-            <div className="mt-5 flex justify-end gap-2">
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setPendingFile(null)} disabled={isLoading} className="rounded-md border border-clinic-border px-4 py-2 text-sm">
                 Cancelar
               </button>

@@ -82,7 +82,7 @@ const CompanySettingsPage = (): JSX.Element => {
         })}
         className="grid gap-5 rounded-md border border-clinic-border bg-clinic-surface p-4"
       >
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-1 text-sm">
             Nome da clínica
             <input {...companyForm.register("name")} className="rounded-md border px-3 py-2" />
@@ -124,7 +124,7 @@ const CompanySettingsPage = (): JSX.Element => {
             companyForm.setValue("logoPublicId", result.publicId);
           }}
         />
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <CepInput
             id="clinic-cep"
             label="CEP"
@@ -132,7 +132,7 @@ const CompanySettingsPage = (): JSX.Element => {
             onChange={(value) => companyForm.setValue("address.cep", value)}
             onBlur={loadCep}
           />
-          <label className="grid gap-1 text-sm md:col-span-2">Rua<input {...companyForm.register("address.street")} className="rounded-md border px-3 py-2" /></label>
+          <label className="grid gap-1 text-sm sm:col-span-2">Rua<input {...companyForm.register("address.street")} className="rounded-md border px-3 py-2" /></label>
           <label className="grid gap-1 text-sm">Número<input {...companyForm.register("address.number")} className="rounded-md border px-3 py-2" /></label>
           <label className="grid gap-1 text-sm">Complemento<input {...companyForm.register("address.complement")} className="rounded-md border px-3 py-2" /></label>
           <label className="grid gap-1 text-sm">Bairro<input {...companyForm.register("address.neighborhood")} className="rounded-md border px-3 py-2" /></label>

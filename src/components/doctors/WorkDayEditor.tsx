@@ -17,7 +17,7 @@ export const WorkDayEditor = ({ value, onChange }: WorkDayEditorProps): JSX.Elem
         const item = value.find((day) => day.weekday === weekday);
         const active = item !== undefined;
         return (
-          <div key={label} className="grid gap-2 rounded-md border border-clinic-border p-3 md:grid-cols-5">
+          <div key={label} className="grid gap-2 rounded-md border border-clinic-border p-3 sm:grid-cols-2 lg:grid-cols-5">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -42,4 +42,3 @@ export const WorkDayEditor = ({ value, onChange }: WorkDayEditorProps): JSX.Elem
     </div>
   );
 };
-

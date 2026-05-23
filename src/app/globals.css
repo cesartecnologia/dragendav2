@@ -42,6 +42,17 @@ textarea {
   font: inherit;
 }
 
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
 .bg-clinic-primary {
   background-color: var(--clinic-primary-dynamic);
 }

@@ -22,7 +22,7 @@ export const FinancialKPIs = ({ summary, isLoading, error }: FinancialKPIsProps)
   }
 
   return (
-    <div className="grid gap-3 md:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => (
         <div key={item.label} className="rounded-md border border-clinic-border bg-clinic-surface p-4">
           <p className="text-sm text-clinic-muted">{item.label}</p>
@@ -32,4 +32,3 @@ export const FinancialKPIs = ({ summary, isLoading, error }: FinancialKPIsProps)
     </div>
   );
 };
-

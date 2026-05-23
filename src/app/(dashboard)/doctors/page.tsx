@@ -26,7 +26,7 @@ const DoctorsPage = (): JSX.Element => {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <PageHeader title="Médicos" description="Equipe médica, CRM, especialidade e agenda." />
         <div className="flex flex-col gap-2 sm:flex-row">
           <Link href="/configuracoes/especialidades" className="inline-flex items-center justify-center gap-2 rounded-md border border-clinic-border bg-clinic-surface px-4 py-2 text-sm font-medium text-clinic-text">
@@ -42,7 +42,7 @@ const DoctorsPage = (): JSX.Element => {
       {isLoading ? <LoadingSkeleton variant="card" /> : null}
       {error !== null ? <EmptyState title="Erro ao carregar médicos" description={error.message} /> : null}
       {!isLoading && error === null && data.length === 0 ? <EmptyState title="Nenhum médico" description="Cadastre o primeiro médico da clínica." actionHref="/medicos/novo" actionLabel="Novo médico" /> : null}
-      <div className="grid gap-4 md:grid-cols-3">{paginatedDoctors.map((doctor) => <DoctorCard key={doctor.id} doctor={doctor} />)}</div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{paginatedDoctors.map((doctor) => <DoctorCard key={doctor.id} doctor={doctor} />)}</div>
       <PageSelector
         currentPage={safePage}
         totalPages={totalPages}

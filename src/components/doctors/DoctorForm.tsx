@@ -51,7 +51,7 @@ export const DoctorForm = ({
       onSubmit={handleSubmit(onSubmit)}
       className="grid gap-5 rounded-md border border-clinic-border bg-clinic-surface p-4"
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1 text-sm">Nome<input {...register("name")} className="rounded-md border px-3 py-2" /></label>
         <label className="grid gap-1 text-sm">CRM<input {...register("crm")} className="rounded-md border px-3 py-2" /></label>
         <label className="relative grid gap-1 text-sm">

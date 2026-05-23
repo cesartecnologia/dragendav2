@@ -207,17 +207,17 @@ export const AppointmentModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
       onMouseDown={onClose}
       role="presentation"
     >
       <form
         onSubmit={handleSubmit(submit)}
         onMouseDown={(event) => event.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-md bg-clinic-surface p-5"
+        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-lg bg-clinic-surface p-4 shadow-xl sm:rounded-md sm:p-5"
       >
         <h2 className="text-lg font-semibold text-clinic-text">Novo agendamento</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1 text-sm">
             Buscar paciente
             <input
@@ -398,7 +398,7 @@ export const AppointmentModal = ({
         {Object.values(errors).length > 0 ? (
           <p className="mt-3 text-sm text-clinic-danger">Revise os campos obrigatórios</p>
         ) : null}
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={onClose}
@@ -418,12 +418,12 @@ export const AppointmentModal = ({
         </div>
         {discountModalOpen ? (
           <div
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
+            className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
             onMouseDown={() => setDiscountModalOpen(false)}
             role="presentation"
           >
             <div
-              className="w-full max-w-md rounded-md bg-clinic-surface p-5 shadow-xl"
+              className="w-full max-w-md rounded-t-lg bg-clinic-surface p-4 shadow-xl sm:rounded-md sm:p-5"
               onMouseDown={(event) => event.stopPropagation()}
               role="dialog"
               aria-modal="true"
@@ -451,7 +451,7 @@ export const AppointmentModal = ({
                   Valor final: <strong>{formatMoney(Math.max(baseAmount - discountValue, 0))}</strong>
                 </p>
               </div>
-              <div className="mt-5 flex justify-end gap-2">
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <button type="button" onClick={() => setDiscountModalOpen(false)} className="rounded-md border border-clinic-border px-4 py-2 text-sm">
                   Cancelar
                 </button>

@@ -47,8 +47,8 @@ export const PaymentMethodModal = ({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4" onMouseDown={onClose} role="presentation">
-      <div className="w-full max-w-sm rounded-md bg-clinic-surface p-5 shadow-xl" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onMouseDown={onClose} role="presentation">
+      <div className="w-full max-w-sm rounded-t-lg bg-clinic-surface p-4 shadow-xl sm:rounded-md sm:p-5" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-clinic-text">Confirmar pagamento</h2>

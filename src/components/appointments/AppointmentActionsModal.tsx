@@ -56,12 +56,12 @@ export const AppointmentActionsModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-0 sm:items-center sm:p-4"
       onMouseDown={onClose}
       role="presentation"
     >
       <div
-        className="w-full max-w-md rounded-md bg-clinic-surface p-5 shadow-xl"
+        className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-lg bg-clinic-surface p-4 shadow-xl sm:rounded-md sm:p-5"
         onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -102,7 +102,7 @@ export const AppointmentActionsModal = ({
             <StatusBadge status={appointment.paymentStatus} />
           </div>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-2">
+        <div className="mt-5 grid gap-2 sm:grid-cols-2">
           <button type="button" onClick={() => onPrint?.(appointment)} className="inline-flex items-center justify-center gap-2 rounded-md border border-clinic-border px-3 py-2 text-sm">
             <FileText className="h-4 w-4" />
             Imprimir

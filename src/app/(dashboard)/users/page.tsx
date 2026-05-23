@@ -98,7 +98,7 @@ const UsersPage = (): JSX.Element => {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <PageHeader title="Funcionários" description="Gerencie os acessos da equipe à clínica." />
         <button
           type="button"
@@ -142,11 +142,11 @@ const UsersPage = (): JSX.Element => {
         ))}
       </div>
       {createOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={() => setCreateOpen(false)} role="presentation">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onMouseDown={() => setCreateOpen(false)} role="presentation">
           <form
             onSubmit={handleSubmit(onSubmit)}
             onMouseDown={(event) => event.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-md bg-clinic-surface p-5 shadow-xl"
+            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-lg bg-clinic-surface p-4 shadow-xl sm:rounded-md sm:p-5"
             role="dialog"
             aria-modal="true"
           >
@@ -159,7 +159,7 @@ const UsersPage = (): JSX.Element => {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="grid gap-1 text-sm text-clinic-text">
                 Nome
                 <input {...register("name")} className="rounded-md border border-clinic-border px-3 py-2" />

@@ -29,7 +29,7 @@ export const PageSelector = ({
       <p className="text-sm text-clinic-muted">
         Mostrando {firstItem} a {lastItem} de {totalItems}
       </p>
-      <div className="inline-flex items-center justify-end gap-2">
+      <div className="inline-flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
         <button
           type="button"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
@@ -39,7 +39,7 @@ export const PageSelector = ({
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <span className="min-w-20 text-center text-sm font-medium text-clinic-text">
+        <span className="min-w-16 text-center text-sm font-medium text-clinic-text sm:min-w-20">
           {currentPage} / {totalPages}
         </span>
         <button

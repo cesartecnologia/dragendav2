@@ -66,6 +66,17 @@ export const CalendarView = ({
 
     return map;
   }, [appointments]);
+  const appointmentsByDate = useMemo(() => {
+    const map = new Map<string, Appointment[]>();
+
+    appointments
+      .filter((appointment) => appointment.status !== "cancelled")
+      .forEach((appointment) => {
+        map.set(appointment.date, [...(map.get(appointment.date) ?? []), appointment]);
+      });
+
+    return map;
+  }, [appointments]);
 
   if (isLoading) {
     return <div className="h-[640px] animate-pulse rounded-md bg-clinic-border" />;
@@ -77,7 +88,61 @@ export const CalendarView = ({
 
   return (
     <div className="overflow-hidden rounded-md border border-clinic-border bg-clinic-surface">
-      <div className="grid grid-cols-[64px_repeat(7,minmax(120px,1fr))] border-b border-clinic-border bg-clinic-bg">
+      <div className="grid gap-3 p-3 md:hidden">
+        {weekDays.map((date) => {
+          const items = appointmentsByDate.get(date) ?? [];
+          const isToday = date === todayKey;
+
+          return (
+            <section
+              key={date}
+              className={`rounded-md border border-clinic-border bg-white p-3 ${isToday ? "ring-1 ring-clinic-primary/40" : ""}`}
+            >
+              <div className={`-mx-3 -mt-3 mb-3 rounded-t-md px-3 py-2 ${isToday ? "bg-clinic-primary/10" : "bg-clinic-bg"}`}>
+                <p className="text-sm font-semibold text-clinic-text">
+                  {new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long" })}
+                </p>
+                <p className="text-xs text-clinic-muted">{formatDateBR(date)}</p>
+              </div>
+              {items.length > 0 ? (
+                <div className="grid gap-2">
+                  {items
+                    .sort((first, second) => first.time.localeCompare(second.time))
+                    .map((appointment) => {
+                      const specialtyColor = getSpecialtyColor(appointment.specialty);
+                      return (
+                        <button
+                          key={appointment.id}
+                          type="button"
+                          onClick={() => setSelectedAppointment(appointment)}
+                          className="rounded-md border border-l-4 border-clinic-border bg-white p-3 text-left shadow-sm"
+                          style={{ borderLeftColor: specialtyColor.border }}
+                        >
+                          <p className="text-sm font-semibold text-clinic-text">
+                            {appointment.time} · {appointment.patientName}
+                          </p>
+                          <p className="text-xs leading-tight text-clinic-muted">
+                            {appointment.doctorName} · {appointment.specialty}
+                          </p>
+                        </button>
+                      );
+                    })}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onEmptySlot?.(date, "08:00")}
+                  className="w-full rounded-md border border-dashed border-clinic-border px-3 py-3 text-sm text-clinic-muted"
+                >
+                  Sem agendamentos neste dia
+                </button>
+              )}
+            </section>
+          );
+        })}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
+      <div className="grid min-w-[960px] grid-cols-[64px_repeat(7,minmax(120px,1fr))] border-b border-clinic-border bg-clinic-bg">
         <div className="p-3 text-center text-clinic-primary">
           <CalendarClock className="mx-auto h-5 w-5" />
         </div>
@@ -99,7 +164,7 @@ export const CalendarView = ({
       </div>
       <div className="max-h-[620px] overflow-auto">
         {hours.map((hour) => (
-          <div key={hour} className="grid min-h-28 grid-cols-[64px_repeat(7,minmax(120px,1fr))] border-b border-clinic-border last:border-b-0">
+          <div key={hour} className="grid min-h-28 min-w-[960px] grid-cols-[64px_repeat(7,minmax(120px,1fr))] border-b border-clinic-border last:border-b-0">
             <div className="border-r border-clinic-border p-2 text-center text-sm text-clinic-muted">
               {hour}:00
             </div>
@@ -148,6 +213,7 @@ export const CalendarView = ({
             })}
           </div>
         ))}
+      </div>
       </div>
       <AppointmentActionsModal
         appointment={selectedAppointment}
