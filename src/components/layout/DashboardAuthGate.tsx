@@ -108,8 +108,7 @@ export const DashboardAuthGate = ({
     user === null ||
     !canAccessRoute ||
     billingAccess.isError ||
-    billingAccess.data?.access.allowed === false ||
-    (canAccessRoute && billingAccess.data === undefined && billingAccess.isFetching)
+    billingAccess.data?.access.allowed === false
   ) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-clinic-bg text-clinic-muted">

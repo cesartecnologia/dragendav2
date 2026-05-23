@@ -32,6 +32,12 @@ export const useAuth = (): AuthStoreState => {
     }
 
     authUnsubscribe = listenAuthState((firebaseUser) => {
+      const currentAuthState = useAuthStore.getState();
+      const isSameFirebaseUser =
+        firebaseUser !== null &&
+        currentAuthState.firebaseUser?.uid === firebaseUser.uid &&
+        currentAuthState.user !== null;
+
       store.setFirebaseUser(firebaseUser);
 
       if (firebaseUser === null) {
@@ -40,7 +46,9 @@ export const useAuth = (): AuthStoreState => {
         return;
       }
 
-      store.setLoading(true);
+      if (!isSameFirebaseUser) {
+        store.setLoading(true);
+      }
 
       void getCurrentPostgresUser(firebaseUser)
         .catch(async (): Promise<User | null> => {
