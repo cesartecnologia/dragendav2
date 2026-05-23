@@ -59,6 +59,33 @@ const getRequestToken = (request: NextRequest): string | null => {
   return request.cookies.get("firebase-token")?.value ?? null;
 };
 
+const clientErrorMessages = new Set([
+  "CRM já cadastrado para esta clínica.",
+  "Médico não encontrado",
+  "Paciente não encontrado",
+  "Agendamento não encontrado",
+  "Horário não disponível",
+  "Clínica não encontrada",
+]);
+
+const getErrorResponse = (error: unknown): { message: string; status: number } => {
+  const message = error instanceof Error ? error.message : "Erro ao processar dados";
+
+  if (message === "Sessão inválida") {
+    return { message, status: 401 };
+  }
+
+  if (clientErrorMessages.has(message)) {
+    return { message, status: 400 };
+  }
+
+  console.error("Erro em /api/data", error);
+  return {
+    message: "Não foi possível concluir a operação. Verifique os dados e tente novamente.",
+    status: 500,
+  };
+};
+
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
   try {
     const token = getRequestToken(request);
@@ -105,8 +132,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     const result = await action(...(body.args as never[]));
     return NextResponse.json({ result });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Erro ao processar dados";
-    const status = message === "Sessão inválida" ? 401 : 500;
+    const { message, status } = getErrorResponse(error);
 
     return NextResponse.json(
       { message },

@@ -7,7 +7,7 @@ import {
   startOfDay,
 } from "date-fns";
 import { format } from "date-fns";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 import { getDb } from "../db";
 import { doctorFromRow } from "../db/mappers";
 import { doctors, schedules } from "../db/schema";
@@ -20,6 +20,46 @@ import type {
 } from "../types";
 
 export type DoctorCreateInput = Omit<Doctor, "id" | "clinicId" | "createdAt">;
+
+const doctorDuplicateCrmMessage = "CRM já cadastrado para esta clínica.";
+
+const getPostgresErrorCode = (error: unknown): string | null => {
+  if (typeof error !== "object" || error === null) {
+    return null;
+  }
+
+  const candidate = error as { code?: unknown; cause?: unknown };
+
+  if (typeof candidate.code === "string") {
+    return candidate.code;
+  }
+
+  return getPostgresErrorCode(candidate.cause);
+};
+
+const ensureUniqueCrm = async (
+  clinicId: string,
+  crm: string,
+  ignoredDoctorId?: string,
+): Promise<void> => {
+  const conditions = [eq(doctors.clinicId, clinicId), eq(doctors.crm, crm)];
+
+  if (ignoredDoctorId !== undefined) {
+    conditions.push(ne(doctors.id, ignoredDoctorId));
+  }
+
+  const existingDoctor = (
+    await getDb()
+      .select({ id: doctors.id })
+      .from(doctors)
+      .where(and(...conditions))
+      .limit(1)
+  )[0];
+
+  if (existingDoctor !== undefined) {
+    throw new Error(doctorDuplicateCrmMessage);
+  }
+};
 
 const timeToMinutes = (time: string): number => {
   const [hours = "0", minutes = "0"] = time.split(":");
@@ -55,27 +95,39 @@ export const createDoctor = async (
   clinicId: string,
   data: DoctorCreateInput,
 ): Promise<Doctor> => {
-  const row = (
-    await getDb()
-      .insert(doctors)
-      .values({
-        clinicId,
-        name: data.name,
-        crm: data.crm,
-        specialty: data.specialty,
-        phone: data.phone,
-        email: data.email,
-        photoUrl: data.photoUrl,
-        photoPublicId: data.photoPublicId,
-        consultationPrice: data.consultationPrice,
-        active: data.active,
-        workDays: data.workDays,
-        workDates: data.workDates,
-        periods: data.periods,
-        vacations: data.vacations,
-      })
-      .returning()
-  )[0];
+  await ensureUniqueCrm(clinicId, data.crm);
+
+  let row: typeof doctors.$inferSelect | undefined;
+
+  try {
+    row = (
+      await getDb()
+        .insert(doctors)
+        .values({
+          clinicId,
+          name: data.name,
+          crm: data.crm,
+          specialty: data.specialty,
+          phone: data.phone,
+          email: data.email,
+          photoUrl: data.photoUrl ?? "",
+          photoPublicId: data.photoPublicId ?? "",
+          consultationPrice: data.consultationPrice ?? 0,
+          active: data.active ?? true,
+          workDays: data.workDays ?? [],
+          workDates: data.workDates ?? [],
+          periods: data.periods ?? [],
+          vacations: data.vacations ?? [],
+        })
+        .returning()
+    )[0];
+  } catch (error: unknown) {
+    if (getPostgresErrorCode(error) === "23505") {
+      throw new Error(doctorDuplicateCrmMessage);
+    }
+
+    throw error;
+  }
 
   if (row === undefined) {
     throw new Error("Não foi possível criar médico");
@@ -91,25 +143,37 @@ export const updateDoctor = async (
   id: string,
   data: Partial<Doctor>,
 ): Promise<void> => {
-  await getDb()
-    .update(doctors)
-    .set({
-      name: data.name,
-      crm: data.crm,
-      specialty: data.specialty,
-      phone: data.phone,
-      email: data.email,
-      photoUrl: data.photoUrl,
-      photoPublicId: data.photoPublicId,
-      consultationPrice: data.consultationPrice,
-      active: data.active,
-      workDays: data.workDays,
-      workDates: data.workDates,
-      periods: data.periods,
-      vacations: data.vacations,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(doctors.clinicId, clinicId), eq(doctors.id, id)));
+  if (data.crm !== undefined) {
+    await ensureUniqueCrm(clinicId, data.crm, id);
+  }
+
+  try {
+    await getDb()
+      .update(doctors)
+      .set({
+        name: data.name,
+        crm: data.crm,
+        specialty: data.specialty,
+        phone: data.phone,
+        email: data.email,
+        photoUrl: data.photoUrl,
+        photoPublicId: data.photoPublicId,
+        consultationPrice: data.consultationPrice,
+        active: data.active,
+        workDays: data.workDays,
+        workDates: data.workDates,
+        periods: data.periods,
+        vacations: data.vacations,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(doctors.clinicId, clinicId), eq(doctors.id, id)));
+  } catch (error: unknown) {
+    if (getPostgresErrorCode(error) === "23505") {
+      throw new Error(doctorDuplicateCrmMessage);
+    }
+
+    throw error;
+  }
 
   if (data.periods !== undefined || data.vacations !== undefined) {
     await regenerateSchedules(clinicId, id);
