@@ -11,26 +11,36 @@ import { firestoreDb } from "../firebase/config";
 import { useAuthStore, type AuthStoreState } from "../stores/authStore";
 import type { Clinic, User } from "../types";
 
-let authListenerStarted = false;
+let authListenerSubscribers = 0;
+let authUnsubscribe: (() => void) | null = null;
 
 export const useAuth = (): AuthStoreState => {
   const store = useAuthStore();
 
   useEffect(() => {
-    if (authListenerStarted) {
-      return;
+    authListenerSubscribers += 1;
+
+    if (authUnsubscribe !== null) {
+      return () => {
+        authListenerSubscribers -= 1;
+
+        if (authListenerSubscribers === 0) {
+          authUnsubscribe?.();
+          authUnsubscribe = null;
+        }
+      };
     }
 
-    authListenerStarted = true;
-
-    const unsubscribe = listenAuthState((firebaseUser) => {
+    authUnsubscribe = listenAuthState((firebaseUser) => {
       store.setFirebaseUser(firebaseUser);
-      store.setLoading(false);
 
       if (firebaseUser === null) {
         store.setUser(null);
+        store.setLoading(false);
         return;
       }
+
+      store.setLoading(true);
 
       void getCurrentPostgresUser(firebaseUser)
         .catch(async (): Promise<User | null> => {
@@ -80,17 +90,23 @@ export const useAuth = (): AuthStoreState => {
         .then((user) => {
           store.setUser(user);
           store.setError(null);
+          store.setLoading(false);
         })
         .catch((error: unknown) => {
           store.setError(
             error instanceof Error ? error.message : "Erro ao carregar usuário",
           );
+          store.setLoading(false);
         });
     });
 
     return () => {
-      unsubscribe();
-      authListenerStarted = false;
+      authListenerSubscribers -= 1;
+
+      if (authListenerSubscribers === 0) {
+        authUnsubscribe?.();
+        authUnsubscribe = null;
+      }
     };
   }, []);
 

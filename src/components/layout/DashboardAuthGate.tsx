@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -19,7 +20,29 @@ export const DashboardAuthGate = ({
   const { firebaseUser, user, isLoading } = useAuth();
   const clinic = useClinic(user?.clinicId ?? "");
   const [graceExpired, setGraceExpired] = useState(false);
-  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const canAccessRoute =
+    user !== null ? canAccessDashboardRoute(user.role, pathname) : false;
+  const billingAccess = useQuery({
+    queryKey: ["billing-access", user?.clinicId ?? "", user?.role ?? ""],
+    queryFn: async () => {
+      const response = await fetch("/api/billing/access", {
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        throw new Error("Não foi possível validar assinatura");
+      }
+
+      return (await response.json()) as { access: { allowed: boolean } };
+    },
+    enabled:
+      !isLoading &&
+      firebaseUser !== null &&
+      user !== null &&
+      canAccessRoute,
+    retry: false,
+    staleTime: 60_000,
+  });
 
   useEffect(() => {
     const primaryColor = clinic.data?.primaryColor;
@@ -57,52 +80,37 @@ export const DashboardAuthGate = ({
 
   useEffect(() => {
     if (isLoading || firebaseUser === null || user === null) {
-      setSubscriptionLoading(true);
       return;
     }
 
-    if (!canAccessDashboardRoute(user.role, pathname)) {
+    if (!canAccessRoute) {
       router.replace("/painel");
-      setSubscriptionLoading(false);
       return;
     }
 
-    let active = true;
+    if (billingAccess.isError || billingAccess.data?.access.allowed === false) {
+      router.replace("/assinatura");
+    }
+  }, [
+    billingAccess.data?.access.allowed,
+    billingAccess.isError,
+    canAccessRoute,
+    firebaseUser,
+    isLoading,
+    router,
+    user,
+  ]);
 
-    void fetch("/api/billing/access", { credentials: "same-origin" })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("Não foi possível validar assinatura");
-        }
-
-        return (await response.json()) as { access: { allowed: boolean } };
-      })
-      .then((payload) => {
-        if (!active) {
-          return;
-        }
-
-        if (!payload.access.allowed && pathname !== "/assinatura") {
-          router.replace("/assinatura");
-          return;
-        }
-
-        setSubscriptionLoading(false);
-      })
-      .catch(() => {
-        if (!active) {
-          return;
-        }
-
-        router.replace("/assinatura");
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [firebaseUser, isLoading, pathname, router, user]);
-
-  if (isLoading || firebaseUser === null || graceExpired || subscriptionLoading) {
+  if (
+    isLoading ||
+    firebaseUser === null ||
+    graceExpired ||
+    user === null ||
+    !canAccessRoute ||
+    billingAccess.isError ||
+    billingAccess.data?.access.allowed === false ||
+    (canAccessRoute && billingAccess.data === undefined && billingAccess.isFetching)
+  ) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-clinic-bg text-clinic-muted">
         <div className="inline-flex items-center gap-2 rounded-md border border-clinic-border bg-clinic-surface px-4 py-3 text-sm">

@@ -11,6 +11,10 @@ import {
   type DoctorCreateInput,
 } from "../services/doctorService";
 import type { Doctor, DoctorFilters } from "../types";
+import {
+  invalidateManyInBackground,
+  invalidateQueriesInBackground,
+} from "../utils/queryInvalidation";
 
 export const doctorsKey = (
   clinicId: string,
@@ -56,9 +60,11 @@ export const useCreateDoctor = (clinicId: string, filters: DoctorFilters = {}) =
     onError: (_error, _data, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
-      await queryClient.invalidateQueries({ queryKey: ["available-slots"] });
+    onSettled: () => {
+      invalidateManyInBackground(queryClient, [
+        { queryKey: key },
+        { queryKey: ["available-slots"] },
+      ]);
     },
   });
 };
@@ -82,11 +88,13 @@ export const useUpdateDoctor = (clinicId: string, filters: DoctorFilters = {}) =
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async (_data, _error, variables) => {
-      await queryClient.invalidateQueries({ queryKey: key });
-      await queryClient.invalidateQueries({ queryKey: ["doctor", clinicId, variables.id] });
-      await queryClient.invalidateQueries({ queryKey: ["available-slots"] });
-      await queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    onSettled: (_data, _error, variables) => {
+      invalidateManyInBackground(queryClient, [
+        { queryKey: key },
+        { queryKey: ["doctor", clinicId, variables.id] },
+        { queryKey: ["available-slots"] },
+        { queryKey: ["appointments"] },
+      ]);
     },
   });
 };
@@ -96,8 +104,10 @@ export const useRegenerateSchedules = (clinicId: string) => {
 
   return useMutation({
     mutationFn: (doctorId: string) => regenerateSchedules(clinicId, doctorId, 60),
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["schedules", clinicId] });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, {
+        queryKey: ["schedules", clinicId],
+      });
     },
   });
 };
@@ -119,8 +129,8 @@ export const useDeleteDoctor = (clinicId: string, filters: DoctorFilters = {}) =
     onError: (_error, _id, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };

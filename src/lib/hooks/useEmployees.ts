@@ -8,6 +8,7 @@ import {
   type EmployeeCreateInput,
 } from "../services/employeeService";
 import type { Employee } from "../types";
+import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
 export const useEmployees = (clinicId: string) => {
   return useQuery<Employee[]>({
@@ -39,8 +40,8 @@ export const useCreateEmployee = (clinicId: string) => {
     onError: (_error, _data, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -64,9 +65,8 @@ export const useUpdateEmployee = (clinicId: string) => {
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
-

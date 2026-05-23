@@ -13,6 +13,7 @@ import {
 import { PageHeader } from "../shared/PageHeader";
 import { useUiStore } from "../../lib/stores/uiStore";
 import { formatMoney } from "../../lib/utils/money";
+import { invalidateQueriesInBackground } from "../../lib/utils/queryInvalidation";
 
 type SubscriptionView = {
   id: string;
@@ -112,8 +113,10 @@ export const SubscriptionOverview = (): JSX.Element => {
   });
   const checkout = useMutation({
     mutationFn: createCheckout,
-    onSuccess: async (createdSubscription) => {
-      await queryClient.invalidateQueries({ queryKey: ["billing-subscription"] });
+    onSuccess: (createdSubscription) => {
+      invalidateQueriesInBackground(queryClient, {
+        queryKey: ["billing-subscription"],
+      });
 
       if (createdSubscription.paymentUrl !== undefined && createdSubscription.paymentUrl !== null && createdSubscription.paymentUrl.length > 0) {
         window.location.assign(createdSubscription.paymentUrl);

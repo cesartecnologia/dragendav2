@@ -10,6 +10,7 @@ import {
   type PatientCreateInput,
 } from "../services/patientService";
 import type { PaginatedResult, Patient, PatientFilters } from "../types";
+import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
 export const patientsKey = (
   clinicId: string,
@@ -59,8 +60,8 @@ export const useCreatePatient = (clinicId: string, filters: PatientFilters) => {
     onError: (_error, _data, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -90,8 +91,8 @@ export const useUpdatePatient = (clinicId: string, filters: PatientFilters) => {
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -115,8 +116,8 @@ export const useDeletePatient = (clinicId: string, filters: PatientFilters) => {
     onError: (_error, _id, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };

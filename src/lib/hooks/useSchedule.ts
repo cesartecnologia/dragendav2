@@ -9,6 +9,7 @@ import {
   getSchedule,
 } from "../services/scheduleService";
 import type { Schedule, Slot } from "../types";
+import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
 export const useSchedule = (
   clinicId: string,
@@ -64,8 +65,8 @@ export const useBookSlot = (clinicId: string) => {
       time: string;
       appointmentId: string;
     }) => bookSlot(clinicId, doctorId, date, time, appointmentId),
-    onSettled: async (_data, _error, variables) => {
-      await queryClient.invalidateQueries({
+    onSettled: (_data, _error, variables) => {
+      invalidateQueriesInBackground(queryClient, {
         queryKey: ["schedule", clinicId, variables.doctorId, variables.date],
       });
     },
@@ -85,11 +86,10 @@ export const useFreeSlot = (clinicId: string) => {
       date: string;
       time: string;
     }) => freeSlot(clinicId, doctorId, date, time),
-    onSettled: async (_data, _error, variables) => {
-      await queryClient.invalidateQueries({
+    onSettled: (_data, _error, variables) => {
+      invalidateQueriesInBackground(queryClient, {
         queryKey: ["schedule", clinicId, variables.doctorId, variables.date],
       });
     },
   });
 };
-

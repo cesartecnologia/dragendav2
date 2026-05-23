@@ -18,6 +18,7 @@ import type {
   PaymentStatus,
   PaymentMethod,
 } from "../types";
+import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
 export const appointmentsKey = (
   clinicId: string,
@@ -80,8 +81,8 @@ export const useCreateAppointment = (
     onError: (_error, _data, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -114,8 +115,8 @@ export const useUpdateAppointmentStatus = (
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -150,8 +151,8 @@ export const useUpdateAppointmentPaymentStatus = (
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -184,8 +185,8 @@ export const useUpdateAppointment = (
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };

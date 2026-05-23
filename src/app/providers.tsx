@@ -14,8 +14,11 @@ export const Providers = ({ children }: ProvidersProps): JSX.Element => {
       new QueryClient({
         defaultOptions: {
           queries: {
+            gcTime: 10 * 60_000,
+            placeholderData: (previousData: unknown) => previousData,
             retry: 1,
             refetchOnWindowFocus: false,
+            staleTime: 60_000,
           },
         },
       }),

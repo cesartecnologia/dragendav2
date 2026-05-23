@@ -15,6 +15,7 @@ import {
   type PaymentCreateInput,
 } from "../services/financialService";
 import type { DateRange, PaginatedResult, Payment, PaymentFilters } from "../types";
+import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
 export const paymentsKey = (
   clinicId: string,
@@ -33,12 +34,16 @@ export const useRevenueSummary = (clinicId: string, dateRange: DateRange) => {
 export const useRevenueCharts = (clinicId: string, dateRange: DateRange) => {
   return useQuery({
     queryKey: ["revenue-charts", clinicId, dateRange],
-    queryFn: async () => ({
-      byDay: await getRevenueByDay(clinicId, dateRange),
-      byDoctor: await getRevenueByDoctor(clinicId, dateRange),
-      byInsurance: await getRevenueByInsurance(clinicId, dateRange),
-      byMethod: await getRevenueByMethod(clinicId, dateRange),
-    }),
+    queryFn: async () => {
+      const [byDay, byDoctor, byInsurance, byMethod] = await Promise.all([
+        getRevenueByDay(clinicId, dateRange),
+        getRevenueByDoctor(clinicId, dateRange),
+        getRevenueByInsurance(clinicId, dateRange),
+        getRevenueByMethod(clinicId, dateRange),
+      ]);
+
+      return { byDay, byDoctor, byInsurance, byMethod };
+    },
     enabled: clinicId.length > 0,
     staleTime: 60_000,
   });
@@ -87,8 +92,8 @@ export const useRegisterPayment = (clinicId: string, filters: PaymentFilters) =>
     onError: (_error, _data, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -118,8 +123,8 @@ export const useUpdatePayment = (clinicId: string, filters: PaymentFilters) => {
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -148,9 +153,8 @@ export const useBulkMarkAsPaid = (clinicId: string, filters: PaymentFilters) => 
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
-

@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getClinicById, updateClinic, type ClinicUpdateInput } from "../services/clinicService";
 import type { Clinic } from "../types";
+import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
 export const useClinic = (clinicId: string) => {
   return useQuery<Clinic | null>({
@@ -30,9 +31,8 @@ export const useUpdateClinic = (clinicId: string) => {
     onError: (_error, _data, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
-

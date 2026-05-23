@@ -8,6 +8,7 @@ import {
   type InsuranceCreateInput,
 } from "../services/insuranceService";
 import type { Insurance } from "../types";
+import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
 export const useInsurances = (clinicId: string) => {
   return useQuery<Insurance[]>({
@@ -39,8 +40,8 @@ export const useCreateInsurance = (clinicId: string) => {
     onError: (_error, _data, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -64,9 +65,8 @@ export const useUpdateInsurance = (clinicId: string) => {
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
-

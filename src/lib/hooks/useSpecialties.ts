@@ -9,6 +9,7 @@ import {
   type SpecialtyCreateInput,
 } from "../services/specialtyService";
 import type { Specialty } from "../types";
+import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
 export const useSpecialties = (clinicId: string) => {
   return useQuery<Specialty[]>({
@@ -46,8 +47,8 @@ export const useCreateSpecialty = (clinicId: string) => {
     onError: (_error, _data, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
@@ -71,9 +72,8 @@ export const useUpdateSpecialty = (clinicId: string) => {
     onError: (_error, _variables, context) => {
       queryClient.setQueryData(key, context?.previousData);
     },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: key });
+    onSettled: () => {
+      invalidateQueriesInBackground(queryClient, { queryKey: key });
     },
   });
 };
-
