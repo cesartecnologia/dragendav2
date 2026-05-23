@@ -22,16 +22,24 @@ export const paymentsKey = (
   filters: PaymentFilters,
 ): readonly [string, string, PaymentFilters] => ["payments", clinicId, filters];
 
-export const useRevenueSummary = (clinicId: string, dateRange: DateRange) => {
+export const useRevenueSummary = (
+  clinicId: string,
+  dateRange: DateRange,
+  enabled = true,
+) => {
   return useQuery({
     queryKey: ["revenue-summary", clinicId, dateRange],
     queryFn: () => getRevenueSummary(clinicId, dateRange),
-    enabled: clinicId.length > 0,
-    staleTime: 60_000,
+    enabled: enabled && clinicId.length > 0,
+    staleTime: 120_000,
   });
 };
 
-export const useRevenueCharts = (clinicId: string, dateRange: DateRange) => {
+export const useRevenueCharts = (
+  clinicId: string,
+  dateRange: DateRange,
+  enabled = true,
+) => {
   return useQuery({
     queryKey: ["revenue-charts", clinicId, dateRange],
     queryFn: async () => {
@@ -44,26 +52,34 @@ export const useRevenueCharts = (clinicId: string, dateRange: DateRange) => {
 
       return { byDay, byDoctor, byInsurance, byMethod };
     },
-    enabled: clinicId.length > 0,
-    staleTime: 60_000,
+    enabled: enabled && clinicId.length > 0,
+    staleTime: 120_000,
   });
 };
 
-export const usePayments = (clinicId: string, filters: PaymentFilters) => {
+export const usePayments = (
+  clinicId: string,
+  filters: PaymentFilters,
+  enabled = true,
+) => {
   return useQuery<PaginatedResult<Payment>>({
     queryKey: paymentsKey(clinicId, filters),
     queryFn: () => getPaymentsPaginated(clinicId, filters, null),
-    enabled: clinicId.length > 0,
-    staleTime: 60_000,
+    enabled: enabled && clinicId.length > 0,
+    staleTime: 120_000,
   });
 };
 
-export const usePendingPayments = (clinicId: string, daysOverdue: number) => {
+export const usePendingPayments = (
+  clinicId: string,
+  daysOverdue: number,
+  enabled = true,
+) => {
   return useQuery<Payment[]>({
     queryKey: ["pending-payments", clinicId, daysOverdue],
     queryFn: () => getPendingPayments(clinicId, daysOverdue),
-    enabled: clinicId.length > 0,
-    staleTime: 60_000,
+    enabled: enabled && clinicId.length > 0,
+    staleTime: 120_000,
   });
 };
 

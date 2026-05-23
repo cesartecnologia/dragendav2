@@ -37,19 +37,20 @@ export const useAppointments = (
     queryKey: appointmentsKey(clinicId, filters),
     queryFn: () => getAppointmentsPaginated(clinicId, filters, null),
     enabled: clinicId.length > 0,
-    staleTime: 30_000,
+    staleTime: 120_000,
   });
 };
 
 export const useAppointmentsByRange = (
   clinicId: string,
   dateRange: { from: Date; to: Date },
+  enabled = true,
 ) => {
   return useQuery<Appointment[]>({
     queryKey: ["appointments-range", clinicId, dateRange.from.toISOString(), dateRange.to.toISOString()],
     queryFn: () => getAppointmentsByRange(clinicId, dateRange),
-    enabled: clinicId.length > 0,
-    staleTime: 30_000,
+    enabled: enabled && clinicId.length > 0,
+    staleTime: 120_000,
   });
 };
 

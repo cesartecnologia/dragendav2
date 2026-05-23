@@ -17,11 +17,15 @@ export const patientsKey = (
   filters: PatientFilters,
 ): readonly [string, string, PatientFilters] => ["patients", clinicId, filters];
 
-export const usePatients = (clinicId: string, filters: PatientFilters) => {
+export const usePatients = (
+  clinicId: string,
+  filters: PatientFilters,
+  enabled = true,
+) => {
   return useQuery<PaginatedResult<Patient>>({
     queryKey: patientsKey(clinicId, filters),
     queryFn: () => getPatientsPaginated(clinicId, filters, null),
-    enabled: clinicId.length > 0,
+    enabled: enabled && clinicId.length > 0,
     staleTime: 300_000,
   });
 };

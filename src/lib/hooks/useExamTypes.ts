@@ -15,6 +15,7 @@ export const useExamTypes = (
   clinicId: string,
   activeOnly = true,
   seedDefaults = false,
+  enabled = true,
 ) => {
   return useQuery<ExamType[]>({
     queryKey: ["exam-types", clinicId, activeOnly],
@@ -25,7 +26,7 @@ export const useExamTypes = (
 
       return await getExamTypes(clinicId, activeOnly);
     },
-    enabled: clinicId.length > 0,
+    enabled: enabled && clinicId.length > 0,
     staleTime: 600_000,
   });
 };

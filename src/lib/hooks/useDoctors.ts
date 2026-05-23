@@ -21,11 +21,15 @@ export const doctorsKey = (
   filters: DoctorFilters,
 ): readonly [string, string, DoctorFilters] => ["doctors", clinicId, filters];
 
-export const useDoctors = (clinicId: string, filters: DoctorFilters = {}) => {
+export const useDoctors = (
+  clinicId: string,
+  filters: DoctorFilters = {},
+  enabled = true,
+) => {
   return useQuery<Doctor[]>({
     queryKey: doctorsKey(clinicId, filters),
     queryFn: () => getDoctors(clinicId, filters),
-    enabled: clinicId.length > 0,
+    enabled: enabled && clinicId.length > 0,
     staleTime: 600_000,
   });
 };

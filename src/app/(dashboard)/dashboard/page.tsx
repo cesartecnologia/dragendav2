@@ -66,7 +66,11 @@ const DashboardPage = (): JSX.Element => {
     [previousMonthDate],
   );
   const appointments = useAppointmentsByRange(clinicId, currentRange);
-  const previousAppointments = useAppointmentsByRange(clinicId, previousRange);
+  const previousAppointments = useAppointmentsByRange(
+    clinicId,
+    previousRange,
+    appointments.isSuccess,
+  );
   const data = appointments.data ?? [];
   const previousData = previousAppointments.data ?? [];
   const activeData = data.filter((item) => item.status !== "cancelled");

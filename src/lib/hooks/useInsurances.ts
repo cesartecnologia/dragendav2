@@ -10,11 +10,11 @@ import {
 import type { Insurance } from "../types";
 import { invalidateQueriesInBackground } from "../utils/queryInvalidation";
 
-export const useInsurances = (clinicId: string) => {
+export const useInsurances = (clinicId: string, enabled = true) => {
   return useQuery<Insurance[]>({
     queryKey: ["insurances", clinicId],
     queryFn: () => getInsurances(clinicId),
-    enabled: clinicId.length > 0,
+    enabled: enabled && clinicId.length > 0,
     staleTime: 600_000,
   });
 };

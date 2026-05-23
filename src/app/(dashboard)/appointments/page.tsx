@@ -1,11 +1,10 @@
 "use client";
 
 import { CalendarDays, List, Plus } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
-import { AppointmentModal } from "../../../components/appointments/AppointmentModal";
 import { CalendarView } from "../../../components/appointments/CalendarView";
 import { ListView } from "../../../components/appointments/ListView";
-import { PaymentMethodModal } from "../../../components/appointments/PaymentMethodModal";
 import { PageHeader } from "../../../components/shared/PageHeader";
 import { useAppointments, useCreateAppointment, useUpdateAppointmentPaymentStatus, useUpdateAppointmentStatus } from "../../../lib/hooks/useAppointments";
 import { useAuth } from "../../../lib/hooks/useAuth";
@@ -16,9 +15,19 @@ import { usePatients } from "../../../lib/hooks/usePatients";
 import { useAvailableSlots } from "../../../lib/hooks/useSchedule";
 import { useClinic } from "../../../lib/hooks/useClinic";
 import { APPOINTMENT_STATUS, PAYMENT_STATUS, type Appointment, type PaymentMethod } from "../../../lib/types";
+import { getPatientById } from "../../../lib/services/patientService";
 import { buildAppointmentConfirmationMessage, buildWhatsAppLink } from "../../../lib/services/whatsappService";
 import { generateAppointmentReceiptPdf } from "../../../lib/utils/receipt";
 import { useUiStore } from "../../../lib/stores/uiStore";
+
+const AppointmentModal = dynamic(
+  () => import("../../../components/appointments/AppointmentModal").then((mod) => mod.AppointmentModal),
+  { ssr: false },
+);
+const PaymentMethodModal = dynamic(
+  () => import("../../../components/appointments/PaymentMethodModal").then((mod) => mod.PaymentMethodModal),
+  { ssr: false },
+);
 
 const AppointmentsPage = (): JSX.Element => {
   const [view, setView] = useState<"list" | "calendar">("calendar");
@@ -36,11 +45,12 @@ const AppointmentsPage = (): JSX.Element => {
   const create = useCreateAppointment(clinicId, filters);
   const updateStatus = useUpdateAppointmentStatus(clinicId, filters);
   const updatePaymentStatus = useUpdateAppointmentPaymentStatus(clinicId, filters);
-  const doctors = useDoctors(clinicId, { active: true });
+  const modalDataEnabled = modalOpen;
+  const doctors = useDoctors(clinicId, { active: true }, modalDataEnabled);
   const clinic = useClinic(clinicId);
-  const patients = usePatients(clinicId, { active: true });
-  const insurances = useInsurances(clinicId);
-  const examTypes = useExamTypes(clinicId);
+  const patients = usePatients(clinicId, { active: true }, modalDataEnabled);
+  const insurances = useInsurances(clinicId, modalDataEnabled);
+  const examTypes = useExamTypes(clinicId, true, false, modalDataEnabled);
   const slots = useAvailableSlots(clinicId, slotDoctorId, slotDate);
   const data = appointments.data?.data ?? [];
   const attendantName =
@@ -53,13 +63,26 @@ const AppointmentsPage = (): JSX.Element => {
     setModalOpen(true);
   };
   const handleWhatsApp = (appointment: Appointment): void => {
-    const patient = patients.data?.data.find((item) => item.id === appointment.patientId);
-    const url = buildWhatsAppLink({
-      phone: patient?.phone ?? "",
-      message: buildAppointmentConfirmationMessage(appointment, clinic.data ?? null),
-    });
-    window.open(url, "_blank", "noopener,noreferrer");
-    pushToast({ type: "success", title: "WhatsApp aberto", description: "A mensagem do agendamento foi preparada." });
+    void (async () => {
+      try {
+        const cachedPatient = patients.data?.data.find(
+          (item) => item.id === appointment.patientId,
+        );
+        const patient =
+          cachedPatient ??
+          (clinicId.length > 0
+            ? await getPatientById(clinicId, appointment.patientId)
+            : null);
+        const url = buildWhatsAppLink({
+          phone: patient?.phone ?? "",
+          message: buildAppointmentConfirmationMessage(appointment, clinic.data ?? null),
+        });
+        window.open(url, "_blank", "noopener,noreferrer");
+        pushToast({ type: "success", title: "WhatsApp aberto", description: "A mensagem do agendamento foi preparada." });
+      } catch {
+        pushToast({ type: "error", title: "Erro ao abrir WhatsApp", description: "Não foi possível preparar a mensagem." });
+      }
+    })();
   };
   const handleConfirm = (appointment: Appointment): void => {
     updateStatus.mutate(

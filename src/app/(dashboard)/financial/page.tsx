@@ -1,6 +1,7 @@
 "use client";
 
 import { endOfMonth, startOfMonth } from "date-fns";
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { Building2, CreditCard, Filter } from "lucide-react";
 import { InsuranceCard } from "../../../components/financial/InsuranceCard";
@@ -8,7 +9,6 @@ import { InsuranceForm } from "../../../components/financial/InsuranceForm";
 import { FinancialKPIs } from "../../../components/financial/FinancialKPIs";
 import { PaymentTable } from "../../../components/financial/PaymentTable";
 import { PendingPayments } from "../../../components/financial/PendingPayments";
-import { RevenueChart } from "../../../components/financial/RevenueChart";
 import { PageHeader } from "../../../components/shared/PageHeader";
 import { DateRangePicker } from "../../../components/shared/DateRangePicker";
 import { PageSelector } from "../../../components/shared/PageSelector";
@@ -19,6 +19,14 @@ import { useUiStore } from "../../../lib/stores/uiStore";
 import { createDateRange } from "../../../lib/utils/date";
 import { paymentMethodLabel } from "../../../lib/utils/labels";
 import type { InsuranceFormValues } from "../../../lib/validations/insurance";
+
+const RevenueChart = dynamic(
+  () => import("../../../components/financial/RevenueChart").then((mod) => mod.RevenueChart),
+  {
+    loading: () => <div className="h-72 animate-pulse rounded-md bg-clinic-border" />,
+    ssr: false,
+  },
+);
 
 const defaultInsuranceValues: InsuranceFormValues = {
   name: "",
@@ -35,11 +43,13 @@ const FinancialPage = (): JSX.Element => {
   const { user } = useAuth();
   const clinicId = user?.clinicId ?? "";
   const [dateRange, setDateRange] = useState(() => createDateRange(startOfMonth(new Date()), endOfMonth(new Date())));
-  const summary = useRevenueSummary(clinicId, dateRange);
-  const charts = useRevenueCharts(clinicId, dateRange);
-  const payments = usePayments(clinicId, { dateRange });
-  const pending = usePendingPayments(clinicId, 7);
-  const insurances = useInsurances(clinicId);
+  const overviewEnabled = tab === "overview";
+  const paymentsEnabled = tab === "overview" || tab === "entries";
+  const summary = useRevenueSummary(clinicId, dateRange, overviewEnabled);
+  const charts = useRevenueCharts(clinicId, dateRange, overviewEnabled);
+  const payments = usePayments(clinicId, { dateRange }, paymentsEnabled);
+  const pending = usePendingPayments(clinicId, 7, tab === "pending");
+  const insurances = useInsurances(clinicId, tab === "insurances");
   const createInsurance = useCreateInsurance(clinicId);
   const pushToast = useUiStore((state) => state.pushToast);
   const insurancePageSize = 9;

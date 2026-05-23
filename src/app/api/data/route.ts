@@ -10,8 +10,8 @@ import * as patientService from "../../../lib/serverServices/patientService";
 import * as scheduleService from "../../../lib/serverServices/scheduleService";
 import * as specialtyService from "../../../lib/serverServices/specialtyService";
 import { verifyFirebaseIdToken } from "../../../lib/firebase/serverAuth";
-import { getUserByFirebaseUid } from "../../../lib/services/authPostgresService";
-import { getBillingAccess } from "../../../lib/services/subscriptionService";
+import { getUserByFirebaseUid, type ClientUser } from "../../../lib/services/authPostgresService";
+import { getBillingAccess, type BillingAccess } from "../../../lib/services/subscriptionService";
 
 export const runtime = "nodejs";
 
@@ -22,6 +22,15 @@ type RpcPayload = {
 };
 
 type ServiceMap = Record<string, Record<string, (...args: never[]) => Promise<unknown> | unknown>>;
+type CacheEntry<T> = {
+  expiresAt: number;
+  promise: Promise<T>;
+};
+
+const userCache = new Map<string, CacheEntry<ClientUser | null>>();
+const billingAccessCache = new Map<string, CacheEntry<BillingAccess>>();
+const userCacheTtlMs = 15_000;
+const billingAccessCacheTtlMs = 30_000;
 
 const services: ServiceMap = {
   appointments: appointmentService as unknown as Record<string, (...args: never[]) => Promise<unknown> | unknown>,
@@ -57,6 +66,45 @@ const getRequestToken = (request: NextRequest): string | null => {
   }
 
   return request.cookies.get("firebase-token")?.value ?? null;
+};
+
+const getCachedUser = (firebaseUid: string): Promise<ClientUser | null> => {
+  const cached = userCache.get(firebaseUid);
+  const now = Date.now();
+
+  if (cached !== undefined && cached.expiresAt > now) {
+    return cached.promise;
+  }
+
+  const promise = getUserByFirebaseUid(firebaseUid).catch((error: unknown) => {
+    userCache.delete(firebaseUid);
+    throw error;
+  });
+  userCache.set(firebaseUid, { expiresAt: now + userCacheTtlMs, promise });
+  return promise;
+};
+
+const getCachedBillingAccess = (
+  clinicId: string,
+  email: string,
+): Promise<BillingAccess> => {
+  const key = `${clinicId}:${email.toLowerCase()}`;
+  const cached = billingAccessCache.get(key);
+  const now = Date.now();
+
+  if (cached !== undefined && cached.expiresAt > now) {
+    return cached.promise;
+  }
+
+  const promise = getBillingAccess(clinicId, email).catch((error: unknown) => {
+    billingAccessCache.delete(key);
+    throw error;
+  });
+  billingAccessCache.set(key, {
+    expiresAt: now + billingAccessCacheTtlMs,
+    promise,
+  });
+  return promise;
 };
 
 const clientErrorMessages = new Set([
@@ -95,13 +143,13 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     }
 
     const firebaseUser = await verifyFirebaseIdToken(token);
-    const user = await getUserByFirebaseUid(firebaseUser.uid);
+    const user = await getCachedUser(firebaseUser.uid);
 
     if (user === null || !user.active) {
       return NextResponse.json({ message: "Usuário sem acesso" }, { status: 403 });
     }
 
-    const access = await getBillingAccess(user.clinicId, user.email);
+    const access = await getCachedBillingAccess(user.clinicId, user.email);
 
     if (!access.allowed) {
       return NextResponse.json(
