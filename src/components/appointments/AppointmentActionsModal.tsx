@@ -85,12 +85,20 @@ export const AppointmentActionsModal = ({
           </button>
         </div>
         <div className="mt-4 grid gap-2 text-sm text-clinic-text">
-          <p>
-            <strong>Médico:</strong> {appointment.doctorName}
-          </p>
-          <p>
-            <strong>Especialidade:</strong> {appointment.specialty}
-          </p>
+          {appointment.type === "exam" ? (
+            <p>
+              <strong>Exame:</strong> {appointment.examType ?? appointment.specialty}
+            </p>
+          ) : (
+            <>
+              <p>
+                <strong>Médico:</strong> {appointment.doctorName}
+              </p>
+              <p>
+                <strong>Especialidade:</strong> {appointment.specialty}
+              </p>
+            </>
+          )}
           <p>
             <strong>Valor:</strong> {formatMoney(appointment.amount)}
           </p>

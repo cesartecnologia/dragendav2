@@ -24,13 +24,19 @@ export const buildAppointmentConfirmationMessage = (
   appointment: Appointment,
   clinic: Clinic | null,
 ): string => {
+  const appointmentLines =
+    appointment.type === "exam"
+      ? [`Exame: ${appointment.examType ?? appointment.specialty}`]
+      : [
+          `Médico(a): ${appointment.doctorName}`,
+          `Especialidade: ${appointment.specialty}`,
+        ];
   const lines = [
     `Olá ${appointment.patientName}! Seu agendamento foi confirmado com sucesso.`,
     "",
     `Data: ${formatDateBR(appointment.date)}`,
     `Horário: ${appointment.time}`,
-    `Médico(a): ${appointment.doctorName}`,
-    `Especialidade: ${appointment.specialty}`,
+    ...appointmentLines,
     `Valor: ${formatMoney(appointment.amount)}`,
     appointment.insuranceName !== null ? `Convênio: ${appointment.insuranceName}` : "Atendimento: Particular",
     "",

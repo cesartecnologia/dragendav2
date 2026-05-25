@@ -78,6 +78,7 @@ export const AppointmentModal = ({
   const date = watch("date");
   const insuranceId = watch("insuranceId");
   const appointmentType = watch("type");
+  const isExam = appointmentType === "exam";
   const examTypeName = watch("examType");
   const patientSearch = watch("patientName");
   const doctorSearch = watch("doctorName");
@@ -92,6 +93,10 @@ export const AppointmentModal = ({
       .slice(0, 8);
   }, [patientSearch, patients]);
   const filteredDoctors = useMemo(() => {
+    if (isExam) {
+      return [];
+    }
+
     const search = doctorSearch.trim().toLowerCase();
     if (search.length < 2) {
       return [];
@@ -100,7 +105,7 @@ export const AppointmentModal = ({
     return doctors
       .filter((doctor) => doctor.name.toLowerCase().includes(search) || doctor.specialty.toLowerCase().includes(search))
       .slice(0, 8);
-  }, [doctorSearch, doctors]);
+  }, [doctorSearch, doctors, isExam]);
   const selectedDoctor = useMemo(
     () => doctors.find((doctor) => doctor.id === doctorId),
     [doctorId, doctors],
@@ -114,7 +119,7 @@ export const AppointmentModal = ({
     [examTypeName, examTypes],
   );
   const baseAmount =
-    appointmentType === "exam"
+    isExam
       ? selectedExamType?.amount ?? 0
       : selectedDoctor?.consultationPrice ?? 0;
   const availableSlots = useMemo(
@@ -163,18 +168,18 @@ export const AppointmentModal = ({
   }, [onClose, open]);
 
   useEffect(() => {
-    if (selectedDoctor !== undefined) {
+    if (!isExam && selectedDoctor !== undefined) {
       setValue("doctorName", selectedDoctor.name);
       setValue("specialty", selectedDoctor.specialty);
       setValue("amount", selectedDoctor.consultationPrice);
     }
-  }, [selectedDoctor, setValue]);
+  }, [isExam, selectedDoctor, setValue]);
 
   useEffect(() => {
-    if (doctorId.length > 0 && date.length > 0) {
+    if (!isExam && doctorId.length > 0 && date.length > 0) {
       onDoctorDateChange(doctorId, date);
     }
-  }, [date, doctorId, onDoctorDateChange]);
+  }, [date, doctorId, isExam, onDoctorDateChange]);
 
   useEffect(() => {
     setValue("discountPercent", 0);
@@ -186,6 +191,16 @@ export const AppointmentModal = ({
       setValue("insuranceName", null);
     }
   }, [appointmentType, baseAmount, selectedInsurance, setValue]);
+
+  useEffect(() => {
+    if (!isExam) {
+      return;
+    }
+
+    setValue("doctorId", "");
+    setValue("doctorName", "");
+    setValue("specialty", selectedExamType?.type ?? "Exame", { shouldValidate: true });
+  }, [isExam, selectedExamType, setValue]);
 
   useEffect(() => {
     setDiscountValue(0);
@@ -247,52 +262,61 @@ export const AppointmentModal = ({
               </div>
             ) : null}
           </label>
-          <label className="grid gap-1 text-sm">
-            Buscar médico
-            <input
-              value={watch("doctorName")}
-              onChange={(event) => {
-                setValue("doctorName", event.target.value, { shouldValidate: true });
-                setValue("doctorId", "");
-                setValue("time", "");
-              }}
-              className="rounded-md border px-3 py-2"
-              placeholder="Digite nome ou especialidade"
-            />
-            {watch("doctorId").length === 0 && filteredDoctors.length > 0 ? (
-              <div className="max-h-40 overflow-auto rounded-md border border-clinic-border bg-white">
-                {filteredDoctors.map((doctor) => (
-                  <button
-                    key={doctor.id}
-                    type="button"
-                    onClick={() => {
-                      setValue("doctorId", doctor.id, { shouldValidate: true });
-                      setValue("doctorName", doctor.name, { shouldValidate: true });
-                      setValue("specialty", doctor.specialty, { shouldValidate: true });
-                      setValue("time", "");
-                    }}
-                    className="block w-full px-3 py-2 text-left hover:bg-clinic-bg"
-                  >
-                    {doctor.name} · {doctor.specialty}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </label>
+          {!isExam ? (
+            <label className="grid gap-1 text-sm">
+              Buscar médico
+              <input
+                value={watch("doctorName")}
+                onChange={(event) => {
+                  setValue("doctorName", event.target.value, { shouldValidate: true });
+                  setValue("doctorId", "");
+                  setValue("time", "");
+                }}
+                className="rounded-md border px-3 py-2"
+                placeholder="Digite nome ou especialidade"
+              />
+              {watch("doctorId").length === 0 && filteredDoctors.length > 0 ? (
+                <div className="max-h-40 overflow-auto rounded-md border border-clinic-border bg-white">
+                  {filteredDoctors.map((doctor) => (
+                    <button
+                      key={doctor.id}
+                      type="button"
+                      onClick={() => {
+                        setValue("doctorId", doctor.id, { shouldValidate: true });
+                        setValue("doctorName", doctor.name, { shouldValidate: true });
+                        setValue("specialty", doctor.specialty, { shouldValidate: true });
+                        setValue("time", "");
+                      }}
+                      className="block w-full px-3 py-2 text-left hover:bg-clinic-bg"
+                    >
+                      {doctor.name} · {doctor.specialty}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {errors.doctorId?.message !== undefined ? (
+                <span className="text-xs text-clinic-danger">{errors.doctorId.message}</span>
+              ) : null}
+            </label>
+          ) : null}
           <label className="grid gap-1 text-sm">
             Data
             <input type="date" min={todayISO()} {...register("date")} className="rounded-md border px-3 py-2" />
           </label>
           <label className="grid gap-1 text-sm">
             Horário
-            <select {...register("time")} disabled={slotsLoading || availableSlots.length === 0} className="rounded-md border px-3 py-2 disabled:opacity-60">
-              <option value="">{slotsLoading ? "Carregando..." : availableSlots.length === 0 ? "Sem horários futuros" : "Selecione"}</option>
-              {availableSlots.map((slot) => (
-                <option key={slot.time} value={slot.time}>
-                  {slot.time}
-                </option>
-              ))}
-            </select>
+            {isExam ? (
+              <input type="time" {...register("time")} className="rounded-md border px-3 py-2" />
+            ) : (
+              <select {...register("time")} disabled={slotsLoading || availableSlots.length === 0} className="rounded-md border px-3 py-2 disabled:opacity-60">
+                <option value="">{slotsLoading ? "Carregando..." : availableSlots.length === 0 ? "Sem horários futuros" : "Selecione"}</option>
+                {availableSlots.map((slot) => (
+                  <option key={slot.time} value={slot.time}>
+                    {slot.time}
+                  </option>
+                ))}
+              </select>
+            )}
             {errors.time?.message !== undefined ? (
               <span className="text-xs text-clinic-danger">{errors.time.message}</span>
             ) : null}
@@ -329,7 +353,11 @@ export const AppointmentModal = ({
               {...register("type")}
               onChange={(event) => {
                 setValue("type", event.target.value as AppointmentCreateValues["type"], { shouldValidate: true });
-                if (event.target.value !== "exam") {
+                if (event.target.value === "exam") {
+                  setValue("doctorId", "");
+                  setValue("doctorName", "");
+                  setValue("specialty", "Exame", { shouldValidate: true });
+                } else {
                   setValue("examType", null);
                 }
               }}
@@ -346,7 +374,13 @@ export const AppointmentModal = ({
               Tipo de exame
               <select
                 value={watch("examType") ?? ""}
-                onChange={(event) => setValue("examType", event.target.value.length > 0 ? event.target.value : null, { shouldValidate: true })}
+                onChange={(event) => {
+                  const value = event.target.value.length > 0 ? event.target.value : null;
+                  const examType = examTypes.find((item) => item.name === value);
+                  setValue("examType", value, { shouldValidate: true });
+                  setValue("specialty", examType?.type ?? "Exame", { shouldValidate: true });
+                  setValue("amount", examType?.amount ?? 0, { shouldValidate: true });
+                }}
                 className="rounded-md border px-3 py-2"
               >
                 <option value="">Selecione</option>
@@ -383,8 +417,8 @@ export const AppointmentModal = ({
           ) : null}
         </div>
         <div className="mt-4 rounded-md bg-clinic-bg p-3 text-sm text-clinic-text">
-          <p>Especialidade: {watch("specialty") || "-"}</p>
-          {appointmentType === "exam" && selectedExamType !== undefined ? (
+          <p>{isExam ? "Exame" : "Especialidade"}: {isExam ? watch("examType") ?? "-" : watch("specialty") || "-"}</p>
+          {isExam && selectedExamType !== undefined ? (
             <p>Laboratório: {selectedExamType.laboratory ?? "Não informado"}</p>
           ) : null}
           {appointmentType !== "return" ? <p>Valor base: {formatMoney(baseAmount)}</p> : null}

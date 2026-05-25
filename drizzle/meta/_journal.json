@@ -43,6 +43,13 @@
       "when": 1779456245833,
       "tag": "0005_shallow_gorgon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779677068534,
+      "tag": "0006_outgoing_jackpot",
+      "breakpoints": true
     }
   ]
 }

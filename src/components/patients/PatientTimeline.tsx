@@ -11,6 +11,11 @@ export type PatientTimelineProps = {
   error: string | null;
 };
 
+const appointmentDetailLabel = (appointment: Appointment): string =>
+  appointment.type === "exam"
+    ? `Exame · ${appointment.examType ?? appointment.specialty}`
+    : `${appointment.doctorName} · ${appointment.specialty}`;
+
 export const PatientTimeline = ({ appointments, isLoading, error }: PatientTimelineProps): JSX.Element => {
   if (isLoading) {
     return <div className="h-48 animate-pulse rounded-md bg-clinic-border" />;
@@ -31,7 +36,7 @@ export const PatientTimeline = ({ appointments, isLoading, error }: PatientTimel
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="font-medium text-clinic-text">{formatDateTimeBR(appointment.date, appointment.time)}</p>
-              <p className="text-sm text-clinic-muted">{appointment.doctorName} · {appointment.specialty}</p>
+              <p className="text-sm text-clinic-muted">{appointmentDetailLabel(appointment)}</p>
             </div>
             <div className="flex gap-2">
               <StatusBadge status={appointment.status} />
@@ -43,4 +48,3 @@ export const PatientTimeline = ({ appointments, isLoading, error }: PatientTimel
     </div>
   );
 };
-

@@ -28,6 +28,23 @@ export type TodayAppointmentsListener = {
 const dateFromRange = (date: Date | string): string =>
   typeof date === "string" ? date.slice(0, 10) : date.toISOString().slice(0, 10);
 
+const appointmentDoctorId = (doctorId: string): string | null =>
+  doctorId.trim().length > 0 ? doctorId : null;
+
+const appointmentDoctorName = (data: Pick<Appointment, "type" | "doctorName">): string =>
+  data.doctorName.trim().length > 0
+    ? data.doctorName.trim()
+    : data.type === APPOINTMENT_TYPE.EXAM
+      ? "Exame"
+      : data.doctorName;
+
+const appointmentSpecialty = (data: Pick<Appointment, "type" | "specialty" | "examType">): string =>
+  data.specialty.trim().length > 0
+    ? data.specialty.trim()
+    : data.type === APPOINTMENT_TYPE.EXAM
+      ? data.examType ?? "Exame"
+      : data.specialty;
+
 const appointmentConditions = (
   clinicId: string,
   filters: AppointmentFilters,
@@ -63,6 +80,9 @@ export const createAppointment = async (
   data: AppointmentCreateInput,
 ): Promise<Appointment> => {
   const db = getDb();
+  const normalizedDoctorId = appointmentDoctorId(data.doctorId);
+  const normalizedDoctorName = appointmentDoctorName(data);
+  const normalizedSpecialty = appointmentSpecialty(data);
   const appointmentRow = (
     await db
       .insert(appointments)
@@ -70,9 +90,9 @@ export const createAppointment = async (
         clinicId,
         patientId: data.patientId,
         patientName: data.patientName,
-        doctorId: data.doctorId,
-        doctorName: data.doctorName,
-        specialty: data.specialty,
+        doctorId: normalizedDoctorId,
+        doctorName: normalizedDoctorName,
+        specialty: normalizedSpecialty,
         date: data.date,
         time: data.time,
         duration: data.duration,
@@ -97,7 +117,9 @@ export const createAppointment = async (
   }
 
   const appointment = appointmentFromRow(appointmentRow);
-  await bookSlot(clinicId, appointment.doctorId, appointment.date, appointment.time, appointment.id);
+  if (appointment.doctorId.length > 0) {
+    await bookSlot(clinicId, appointment.doctorId, appointment.date, appointment.time, appointment.id);
+  }
 
   if (appointment.type !== APPOINTMENT_TYPE.RETURN) {
     await db.insert(payments).values({
@@ -105,7 +127,7 @@ export const createAppointment = async (
       appointmentId: appointment.id,
       patientId: appointment.patientId,
       patientName: appointment.patientName,
-      doctorId: appointment.doctorId,
+      doctorId: appointmentDoctorId(appointment.doctorId),
       doctorName: appointment.doctorName,
       specialty: appointment.specialty,
       date: appointment.date,
@@ -134,7 +156,7 @@ export const updateAppointment = async (
     .set({
       patientId: data.patientId,
       patientName: data.patientName,
-      doctorId: data.doctorId,
+      doctorId: data.doctorId === undefined ? undefined : appointmentDoctorId(data.doctorId),
       doctorName: data.doctorName,
       specialty: data.specialty,
       date: data.date,
@@ -172,7 +194,9 @@ export const updateStatus = async (
 
     if (current !== undefined) {
       const appointment = appointmentFromRow(current);
-      await freeSlot(clinicId, appointment.doctorId, appointment.date, appointment.time);
+      if (appointment.doctorId.length > 0) {
+        await freeSlot(clinicId, appointment.doctorId, appointment.date, appointment.time);
+      }
     }
   }
 

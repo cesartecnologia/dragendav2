@@ -27,6 +27,11 @@ const hours = Array.from({ length: 11 }, (_, index) => `${index + 8}`.padStart(2
 
 const toDateKey = (date: Date): string => date.toISOString().slice(0, 10);
 
+const appointmentDetailLabel = (appointment: Appointment): string =>
+  appointment.type === "exam"
+    ? `Exame · ${appointment.examType ?? appointment.specialty}`
+    : `${appointment.doctorName} · ${appointment.specialty}`;
+
 const createWeekDays = (appointments: Appointment[]): string[] => {
   const firstAppointment = appointments[0]?.date;
   const base = firstAppointment !== undefined ? new Date(`${firstAppointment}T12:00:00`) : new Date();
@@ -122,7 +127,7 @@ export const CalendarView = ({
                             {appointment.time} · {appointment.patientName}
                           </p>
                           <p className="text-xs leading-tight text-clinic-muted">
-                            {appointment.doctorName} · {appointment.specialty}
+                            {appointmentDetailLabel(appointment)}
                           </p>
                         </button>
                       );
@@ -193,7 +198,7 @@ export const CalendarView = ({
                         {appointment.time} · {appointment.patientName}
                       </p>
                       <p className="text-[11px] leading-tight text-clinic-muted">
-                        {appointment.doctorName} · {appointment.specialty}
+                        {appointmentDetailLabel(appointment)}
                       </p>
                     </button>
                       );

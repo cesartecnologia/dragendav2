@@ -102,8 +102,12 @@ export const generateAppointmentReceiptPdf = async (
 
   const rows: Array<[string, string]> = [
     ["Paciente", appointment.patientName],
-    ["Médico(a)", appointment.doctorName],
-    ["Especialidade", appointment.specialty],
+    ...(appointment.type === "exam"
+      ? ([["Exame", appointment.examType ?? appointment.specialty]] as Array<[string, string]>)
+      : ([
+          ["Médico(a)", appointment.doctorName],
+          ["Especialidade", appointment.specialty],
+        ] as Array<[string, string]>)),
     ["Data e horário", `${formatDateBR(appointment.date)} às ${appointment.time}`],
     ["Tipo", appointment.type === "return" ? "Retorno" : appointment.type === "exam" ? "Exame" : appointment.type === "procedure" ? "Procedimento" : "Consulta"],
     ["Convênio", appointment.insuranceName ?? "Particular"],

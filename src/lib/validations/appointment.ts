@@ -2,12 +2,45 @@ import { z } from "zod";
 import { APPOINTMENT_STATUS, APPOINTMENT_TYPE, PAYMENT_METHOD, PAYMENT_STATUS } from "../types";
 import { isPastBrazilDateTime } from "../utils/date";
 
-const appointmentBaseSchema = z.object({
+const requireDoctorForNonExam = (
+  values: { type?: string; doctorId?: string; doctorName?: string; specialty?: string },
+  context: z.RefinementCtx,
+): void => {
+  if (values.type === APPOINTMENT_TYPE.EXAM) {
+    return;
+  }
+
+  if ((values.doctorId ?? "").length === 0) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["doctorId"],
+      message: "Selecione um médico",
+    });
+  }
+
+  if ((values.doctorName ?? "").trim().length === 0) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["doctorName"],
+      message: "Informe o médico",
+    });
+  }
+
+  if ((values.specialty ?? "").trim().length === 0) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["specialty"],
+      message: "Informe a especialidade",
+    });
+  }
+};
+
+const appointmentFieldsSchema = z.object({
   patientId: z.string().min(1, "Selecione um paciente"),
   patientName: z.string().min(1, "Informe o paciente"),
-  doctorId: z.string().min(1, "Selecione um médico"),
-  doctorName: z.string().min(1, "Informe o médico"),
-  specialty: z.string().min(1, "Informe a especialidade"),
+  doctorId: z.string(),
+  doctorName: z.string(),
+  specialty: z.string(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida"),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Informe um horário válido"),
   duration: z.coerce.number().min(5, "Duração mínima de 5 minutos"),
@@ -32,21 +65,23 @@ const appointmentBaseSchema = z.object({
   }).nullable(),
 });
 
+const appointmentBaseSchema = appointmentFieldsSchema.superRefine(requireDoctorForNonExam);
+
 export const appointmentSchema = appointmentBaseSchema.refine((values) => !isPastBrazilDateTime(values.date, values.time), {
   path: ["time"],
   message: "Selecione uma data e horário futuros",
 });
 
-export const appointmentCreateSchema = appointmentBaseSchema.omit({
+export const appointmentCreateSchema = appointmentFieldsSchema.omit({
   status: true,
   paymentStatus: true,
   whatsappSent: true,
-}).refine((values) => !isPastBrazilDateTime(values.date, values.time), {
+}).superRefine(requireDoctorForNonExam).refine((values) => !isPastBrazilDateTime(values.date, values.time), {
   path: ["time"],
   message: "Selecione uma data e horário futuros",
 });
 
-export const appointmentUpdateSchema = appointmentBaseSchema.partial();
+export const appointmentUpdateSchema = appointmentFieldsSchema.partial();
 
 export type AppointmentFormValues = z.infer<typeof appointmentSchema>;
 export type AppointmentCreateValues = z.infer<typeof appointmentCreateSchema>;
