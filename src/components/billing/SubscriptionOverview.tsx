@@ -29,6 +29,7 @@ type BillingAccessView = {
   master: boolean;
   status: "trialing" | "active" | "past_due" | "cancelled" | "blocked" | "none";
   trialEndsAt: string | null;
+  trialDaysRemaining: number | null;
   subscription: SubscriptionView | null;
 };
 
@@ -38,7 +39,7 @@ type SubscriptionResponse = {
 };
 
 const statusLabel: Record<BillingAccessView["status"], string> = {
-  trialing: "Aguardando pagamento",
+  trialing: "Teste grátis",
   active: "Ativa",
   past_due: "Pagamento pendente",
   cancelled: "Cancelada",
@@ -144,18 +145,24 @@ export const SubscriptionOverview = (): JSX.Element => {
   const amount = currentSubscription?.amount ?? 9990;
   const nextDueDate = currentSubscription?.nextDueDate ?? null;
   const trialEndsAt = data?.access.trialEndsAt ?? null;
+  const trialDaysRemaining = data?.access.trialDaysRemaining ?? null;
+  const isTrialActive = currentStatus === "trialing" && data?.access.allowed === true;
   const headline = data?.access.master === true
     ? "Acesso Master liberado"
-    : currentStatus === "trialing"
-      ? "Assinatura em andamento"
+    : isTrialActive
+      ? "Teste grátis liberado"
+      : currentStatus === "trialing"
+        ? "Teste grátis encerrado"
       : currentStatus === "active"
         ? "Assinatura ativa"
         : "Escolha sua assinatura";
   const description = data?.access.master === true
     ? "Este usuário acessa o sistema completo para testes e validações."
+    : isTrialActive
+      ? "Use o sistema completo por 7 dias. Seus cadastros ficam salvos quando decidir assinar."
     : hasAccess
       ? "Acompanhe o plano, vencimento e situação da sua clínica."
-      : "Assine para continuar usando sua clínica com os cadastros preservados.";
+      : "Assine para continuar de onde parou, mantendo todos os cadastros da clínica.";
   const ctaLabel = currentStatus === "past_due" || currentStatus === "blocked"
     ? "Regularizar assinatura"
     : "Assinar agora";
@@ -229,8 +236,13 @@ export const SubscriptionOverview = (): JSX.Element => {
                     </div>
                     {trialEndsAt !== null ? (
                       <div className="rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3">
-                        <p className="text-sm font-bold text-slate-800">Pagamento em aberto até</p>
-                        <p className="mt-1 text-sm text-slate-600">{formatDisplayDate(trialEndsAt)}</p>
+                        <p className="text-sm font-bold text-slate-800">
+                          {isTrialActive ? "Teste grátis termina em" : "Teste grátis terminou em"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {formatDisplayDate(trialEndsAt)}
+                          {trialDaysRemaining !== null && isTrialActive ? ` (${trialDaysRemaining} dia${trialDaysRemaining === 1 ? "" : "s"})` : ""}
+                        </p>
                       </div>
                     ) : null}
                   </div>

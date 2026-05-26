@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updatePayment } from "../../../../lib/serverServices/financialService";
 import { paymentUpdateSchema } from "../../../../lib/validations/payment";
-import { verifyFirebaseIdToken } from "../../../../lib/firebase/serverAuth";
-import { getUserByFirebaseUid, type ClientUser } from "../../../../lib/services/authPostgresService";
+import { getAuthorizedSessionFromRequest } from "../../../../lib/auth/apiSession";
 
 export type PaymentRouteContext = {
   params: Promise<{
@@ -10,24 +9,14 @@ export type PaymentRouteContext = {
   }>;
 };
 
-const authenticate = async (request: NextRequest): Promise<ClientUser | null> => {
-  const authorization = request.headers.get("authorization") ?? "";
-
-  if (!authorization.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const firebaseUser = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
-  return await getUserByFirebaseUid(firebaseUser.uid);
-};
-
 export const PATCH = async (request: NextRequest, context: PaymentRouteContext): Promise<NextResponse> => {
-  const user = await authenticate(request);
+  const session = await getAuthorizedSessionFromRequest(request);
 
-  if (user === null || !user.active) {
+  if (session === null) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
+  const { user } = session;
   const parsed = paymentUpdateSchema.safeParse(await request.json());
 
   if (!parsed.success) {

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getAuthorizedSessionFromRequest } from "../../../lib/auth/apiSession";
 import type { CloudinaryUploadResult } from "../../../lib/types";
 
 export const runtime = "nodejs";
@@ -24,16 +25,6 @@ const requiredEnv = (key: string, value: string | undefined): string => {
   return value;
 };
 
-const verifySession = (request: NextRequest): boolean => {
-  const authorization = request.headers.get("authorization") ?? "";
-  const sessionCookie =
-    request.cookies.get("__session")?.value ??
-    request.cookies.get("firebase-token")?.value ??
-    "";
-
-  return authorization.startsWith("Bearer ") || sessionCookie.length > 0;
-};
-
 const parseMultipart = async (request: NextRequest): Promise<ParsedUpload> => {
   const formData = await request.formData();
   const file = formData.get("file");
@@ -47,7 +38,9 @@ const parseMultipart = async (request: NextRequest): Promise<ParsedUpload> => {
 };
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
-  if (!verifySession(request)) {
+  const session = await getAuthorizedSessionFromRequest(request);
+
+  if (session === null) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { getSessionUserFromRequest } from "../../../../lib/auth/apiSession";
+import { getAuthorizedSessionFromRequest } from "../../../../lib/auth/apiSession";
 import {
   getTemplates,
   updateTemplate,
@@ -18,23 +18,25 @@ const schema = z.object({
 });
 
 export const GET = async (request: NextRequest): Promise<NextResponse> => {
-  const user = await getSessionUserFromRequest(request);
+  const session = await getAuthorizedSessionFromRequest(request);
 
-  if (user === null || !user.active) {
+  if (session === null) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
+  const { user } = session;
   const templates = await getTemplates(user.clinicId);
   return NextResponse.json({ templates });
 };
 
 export const PATCH = async (request: NextRequest): Promise<NextResponse> => {
-  const user = await getSessionUserFromRequest(request);
+  const session = await getAuthorizedSessionFromRequest(request);
 
-  if (user === null || !user.active) {
+  if (session === null) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
+  const { user } = session;
   const parsed = schema.safeParse(await request.json());
 
   if (!parsed.success) {

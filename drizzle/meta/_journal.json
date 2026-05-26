@@ -50,6 +50,13 @@
       "when": 1779677068534,
       "tag": "0006_outgoing_jackpot",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779760800000,
+      "tag": "0007_secure_trial_subscription_ids",
+      "breakpoints": true
     }
   ]
 }

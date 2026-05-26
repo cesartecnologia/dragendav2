@@ -71,6 +71,18 @@ const emptyAddress = (city: string, state: string): Address => ({
 const buildMasterCnpj = (clinicId: string): string =>
   clinicId.replace(/\D/g, "").slice(0, 14).padEnd(14, "0");
 
+const trialDays = 7;
+
+const buildTrialProviderId = (clinicId: string): string => `trial:${clinicId}`;
+
+const buildTrialEndDate = (): Date => {
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
+  return trialEndsAt;
+};
+
+const dateOnly = (date: Date): string => date.toISOString().slice(0, 10);
+
 const ensureMasterSubscription = async (clinicId: string): Promise<void> => {
   await getDb()
     .insert(subscriptions)
@@ -154,15 +166,17 @@ export const bootstrapClinicOwner = async (
         target: clinics.id,
       });
 
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 7);
-    const trialDate = trialEndsAt.toISOString().slice(0, 10);
+    const trialEndsAt = buildTrialEndDate();
+    const trialDate = dateOnly(trialEndsAt);
+    const trialProviderId = buildTrialProviderId(input.clinicId);
 
     await tx
       .insert(subscriptions)
       .values({
         clinicId: input.clinicId,
         provider: "asaas",
+        providerCustomerId: trialProviderId,
+        providerSubscriptionId: trialProviderId,
         status: "trialing",
         plan: "starter",
         amount: 9990,
@@ -363,15 +377,17 @@ export const syncFirebaseUserToPostgres = async (
         target: clinics.id,
       });
 
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 7);
-    const trialDate = trialEndsAt.toISOString().slice(0, 10);
+    const trialEndsAt = buildTrialEndDate();
+    const trialDate = dateOnly(trialEndsAt);
+    const trialProviderId = buildTrialProviderId(input.clinicId);
 
     await tx
       .insert(subscriptions)
       .values({
         clinicId: input.clinicId,
         provider: "asaas",
+        providerCustomerId: trialProviderId,
+        providerSubscriptionId: trialProviderId,
         status: "trialing",
         plan: "starter",
         amount: 9990,

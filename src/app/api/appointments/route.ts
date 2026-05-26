@@ -1,38 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { appointmentCreateSchema } from "../../../lib/validations/appointment";
 import { createAppointment, getAppointmentsPaginated } from "../../../lib/serverServices/appointmentService";
-import { verifyFirebaseIdToken } from "../../../lib/firebase/serverAuth";
-import { getUserByFirebaseUid, type ClientUser } from "../../../lib/services/authPostgresService";
-
-const authenticate = async (request: NextRequest): Promise<ClientUser | null> => {
-  const authorization = request.headers.get("authorization") ?? "";
-
-  if (!authorization.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const firebaseUser = await verifyFirebaseIdToken(authorization.slice("Bearer ".length).trim());
-  return await getUserByFirebaseUid(firebaseUser.uid);
-};
+import { getAuthorizedSessionFromRequest } from "../../../lib/auth/apiSession";
 
 export const GET = async (request: NextRequest): Promise<NextResponse> => {
-  const user = await authenticate(request);
+  const session = await getAuthorizedSessionFromRequest(request);
 
-  if (user === null || !user.active) {
+  if (session === null) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
+  const { user } = session;
   const result = await getAppointmentsPaginated(user.clinicId, {}, null);
   return NextResponse.json({ data: result.data, hasMore: result.hasMore });
 };
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
-  const user = await authenticate(request);
+  const session = await getAuthorizedSessionFromRequest(request);
 
-  if (user === null || !user.active) {
+  if (session === null) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
+  const { user } = session;
   const body = (await request.json()) as unknown;
   const parsed = appointmentCreateSchema.safeParse(body);
 

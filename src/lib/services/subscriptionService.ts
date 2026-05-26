@@ -67,6 +67,7 @@ export type BillingAccess = {
   master: boolean;
   status: SubscriptionStatus | "none";
   trialEndsAt: string | null;
+  trialDaysRemaining: number | null;
   subscription: SubscriptionView | null;
 };
 
@@ -129,6 +130,32 @@ const subscriptionFromRow = (
   currentPeriodEnd: row.currentPeriodEnd,
 });
 
+const trialDays = 7;
+
+const buildTrialProviderId = (clinicId: string): string => `trial:${clinicId}`;
+
+const buildTrialEndDate = (): Date => {
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
+  return trialEndsAt;
+};
+
+const dateOnly = (date: Date): string => date.toISOString().slice(0, 10);
+
+const daysRemaining = (date: Date | null): number | null => {
+  if (date === null) {
+    return null;
+  }
+
+  const diffMs = date.getTime() - Date.now();
+
+  if (diffMs < 0) {
+    return 0;
+  }
+
+  return Math.max(1, Math.ceil(diffMs / 86_400_000));
+};
+
 export const isMasterEmail = (email: string): boolean => {
   const emails = process.env.MASTER_USER_EMAILS ?? "";
   return emails
@@ -147,15 +174,17 @@ export const ensureTrialSubscription = async (
     return existing;
   }
 
-  const trialEndsAt = new Date();
-  trialEndsAt.setDate(trialEndsAt.getDate() + 7);
-  const trialDate = trialEndsAt.toISOString().slice(0, 10);
+  const trialEndsAt = buildTrialEndDate();
+  const trialDate = dateOnly(trialEndsAt);
+  const trialProviderId = buildTrialProviderId(clinicId);
   const row = (
     await getDb()
       .insert(subscriptions)
       .values({
         clinicId,
         provider: "asaas",
+        providerCustomerId: trialProviderId,
+        providerSubscriptionId: trialProviderId,
         status: "trialing",
         plan: "starter",
         amount: 9990,
@@ -192,6 +221,7 @@ export const getBillingAccess = async (
       master: true,
       status: "active",
       trialEndsAt: null,
+      trialDaysRemaining: null,
       subscription: await getSubscriptionByClinic(clinicId),
     };
   }
@@ -209,12 +239,14 @@ export const getBillingAccess = async (
     trialEndsAt !== null &&
     trialEndsAt.getTime() >= Date.now();
   const paidActive = subscription.status === "active";
+  const allowed = paidActive || trialActive;
 
   return {
-    allowed: paidActive || trialActive,
+    allowed,
     master: false,
     status: subscription.status,
     trialEndsAt: trialEndsAt?.toISOString() ?? null,
+    trialDaysRemaining: subscription.status === "trialing" ? daysRemaining(trialEndsAt) : null,
     subscription,
   };
 };
