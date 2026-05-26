@@ -4,6 +4,7 @@ import {
   HeartPulse,
   LockKeyhole,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
   TrendingUp,
 } from "lucide-react";
@@ -51,7 +52,7 @@ export const PublicSubscriptionView = ({
             <div className="space-y-7">
               <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1 text-xs font-bold text-sky-700">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Assinatura mensal
+                Teste grátis por 7 dias
               </div>
 
               <div className="space-y-4">
@@ -68,14 +69,21 @@ export const PublicSubscriptionView = ({
                   <span className="pb-2 text-sm font-medium text-slate-500">/mês</span>
                 </div>
                 <Link
-                  href="/assinatura/iniciar"
+                  href="/register"
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-sky-900/15 transition hover:bg-sky-700"
+                >
+                  Começar teste grátis
+                  <Sparkles className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/assinatura/iniciar"
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-white px-5 py-3 text-sm font-bold text-sky-900 transition hover:bg-sky-50"
                 >
                   Assinar agora
                   <LockKeyhole className="h-4 w-4" />
                 </Link>
                 <p className="mt-3 text-center text-xs font-medium text-slate-500">
-                  Pagamento seguro pelo Asaas.
+                  Teste sem cobrança inicial. Ao assinar, o pagamento é feito pelo Asaas.
                 </p>
               </div>
             </div>
