@@ -62,9 +62,9 @@ export const PublicSubscriptionView = ({
                 <p className="max-w-xl text-base leading-8 text-slate-600">{description}</p>
               </div>
 
-              <div className="rounded-[28px] border border-sky-100 bg-white p-5 shadow-[0_18px_45px_rgba(14,116,144,0.08)]">
+              <div className="rounded-[28px] border border-sky-100 bg-white p-5 text-center shadow-[0_18px_45px_rgba(14,116,144,0.08)]">
                 <p className="text-sm font-semibold text-slate-500">Plano completo</p>
-                <div className="mt-2 flex flex-wrap items-end gap-2 text-slate-950">
+                <div className="mt-2 flex flex-wrap items-end justify-center gap-2 text-slate-950">
                   <span className="text-5xl font-bold tracking-tight sm:text-6xl">R$ 99,90</span>
                   <span className="pb-2 text-sm font-medium text-slate-500">/mês</span>
                 </div>
