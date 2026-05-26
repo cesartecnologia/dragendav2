@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { bootstrapPostgresClinic } from "../../../lib/auth/sessionClient";
-import { registerWithEmail } from "../../../lib/firebase/auth";
+import { getAuthErrorCode, loginWithEmail, registerWithEmail } from "../../../lib/firebase/auth";
 import { firestoreDb } from "../../../lib/firebase/config";
 import { useAuthStore } from "../../../lib/stores/authStore";
 import { maskCnpj, onlyNumbers } from "../../../lib/utils/masks";
@@ -79,6 +79,15 @@ export const CompletePaidSignupForm = ({
         name: values.name,
         email: values.email,
         password: values.password,
+      }).catch(async (error: unknown) => {
+        if (getAuthErrorCode(error) !== "auth/email-already-in-use") {
+          throw error;
+        }
+
+        return await loginWithEmail({
+          email: values.email,
+          password: values.password,
+        });
       });
       const clinicId = crypto.randomUUID();
 

@@ -157,11 +157,16 @@ const getOptionalEnv = (...values: Array<string | undefined>): string | undefine
   return values.find((value) => value !== undefined && value.trim().length > 0);
 };
 
-const getAsaasBaseUrl = (): string => {
+const getConfiguredAsaasBaseUrl = (): string => {
   const configuredUrl =
     process.env.ASAAS_API_BASE_URL?.replace(/\/$/, "") ??
-    process.env.ASAAS_API_URL?.replace(/\/$/, "") ??
-    "https://api-sandbox.asaas.com/v3";
+    process.env.ASAAS_API_URL?.replace(/\/$/, "");
+
+  if (configuredUrl === undefined || configuredUrl.trim().length === 0) {
+    return process.env.ASAAS_ENV?.trim().toLowerCase() === "sandbox"
+      ? "https://api-sandbox.asaas.com/v3"
+      : "https://api.asaas.com/v3";
+  }
 
   if (configuredUrl === "https://sandbox.asaas.com/api/v3") {
     return "https://api-sandbox.asaas.com/v3";
@@ -172,6 +177,25 @@ const getAsaasBaseUrl = (): string => {
   }
 
   return configuredUrl;
+};
+
+const getAsaasBaseUrl = (): string => getConfiguredAsaasBaseUrl();
+
+const getAlternateAsaasBaseUrl = (baseUrl: string): string | null => {
+  if (baseUrl.includes("api-sandbox.asaas.com")) {
+    return "https://api.asaas.com/v3";
+  }
+
+  if (baseUrl.includes("api.asaas.com")) {
+    return "https://api-sandbox.asaas.com/v3";
+  }
+
+  return null;
+};
+
+const isInvalidApiKeyError = (message: string): boolean => {
+  const normalized = message.toLowerCase();
+  return normalized.includes("chave de api") && (normalized.includes("inválida") || normalized.includes("invalida"));
 };
 
 const getAsaasWebBaseUrl = (): string => {
@@ -195,14 +219,16 @@ const asaasFetch = async <TResponse>(
     "ASAAS_API_KEY ou ASAAS_ACCESS_TOKEN",
     getOptionalEnv(process.env.ASAAS_API_KEY, process.env.ASAAS_ACCESS_TOKEN),
   );
-  const response = await fetch(`${getAsaasBaseUrl()}${path}`, {
+  const requestInit: RequestInit = {
     ...init,
     headers: {
       "Content-Type": "application/json",
       access_token: accessToken,
       ...init.headers,
     },
-  });
+  };
+  const baseUrl = getAsaasBaseUrl();
+  const response = await fetch(`${baseUrl}${path}`, requestInit);
 
   if (!response.ok) {
     const payload = (await response.json().catch(
@@ -210,6 +236,24 @@ const asaasFetch = async <TResponse>(
     )) as AsaasErrorResponse;
     const message =
       payload.errors?.[0]?.description ?? "Erro ao comunicar com o Asaas";
+
+    const alternateBaseUrl = getAlternateAsaasBaseUrl(baseUrl);
+
+    if (alternateBaseUrl !== null && isInvalidApiKeyError(message)) {
+      const retryResponse = await fetch(`${alternateBaseUrl}${path}`, requestInit);
+
+      if (retryResponse.ok) {
+        return (await retryResponse.json()) as TResponse;
+      }
+
+      const retryPayload = (await retryResponse.json().catch(
+        (): AsaasErrorResponse => ({ errors: [] }),
+      )) as AsaasErrorResponse;
+      const retryMessage =
+        retryPayload.errors?.[0]?.description ?? "Erro ao comunicar com o Asaas";
+      throw new Error(retryMessage);
+    }
+
     throw new Error(message);
   }
 

@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { bootstrapPostgresClinic } from "../../../lib/auth/sessionClient";
-import { registerWithEmail } from "../../../lib/firebase/auth";
+import { getAuthErrorCode, loginWithEmail, registerWithEmail } from "../../../lib/firebase/auth";
 import { firestoreDb } from "../../../lib/firebase/config";
 import { useAuthStore } from "../../../lib/stores/authStore";
 import { maskCnpj, onlyNumbers } from "../../../lib/utils/masks";
@@ -35,6 +35,7 @@ type RegisterFormValues = z.infer<typeof schema>;
 const RegisterPage = (): JSX.Element => {
   const router = useRouter();
   const setFirebaseUser = useAuthStore((state) => state.setFirebaseUser);
+  const setUser = useAuthStore((state) => state.setUser);
   const setLoading = useAuthStore((state) => state.setLoading);
   const [step, setStep] = useState(1);
   const {
@@ -65,6 +66,15 @@ const RegisterPage = (): JSX.Element => {
         name: values.name,
         email: values.email,
         password: values.password,
+      }).catch(async (error: unknown) => {
+        if (getAuthErrorCode(error) !== "auth/email-already-in-use") {
+          throw error;
+        }
+
+        return await loginWithEmail({
+          email: values.email,
+          password: values.password,
+        });
       });
       const clinicId = crypto.randomUUID();
       await setDoc(doc(firestoreDb, "clinics", clinicId), {
@@ -99,7 +109,7 @@ const RegisterPage = (): JSX.Element => {
         active: true,
         createdAt: serverTimestamp(),
       });
-      await bootstrapPostgresClinic(result.user, {
+      const user = await bootstrapPostgresClinic(result.user, {
         clinicId,
         ownerName: values.name,
         ownerEmail: values.email,
@@ -110,6 +120,7 @@ const RegisterPage = (): JSX.Element => {
         state: values.state,
       });
       setFirebaseUser(result.user);
+      setUser(user);
       setLoading(false);
       router.push("/painel");
     } catch (error: unknown) {
