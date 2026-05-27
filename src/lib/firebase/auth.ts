@@ -39,6 +39,10 @@ export type AuthErrorCode =
   | "auth/email-already-in-use"
   | "auth/weak-password"
   | "auth/invalid-email"
+  | "auth/invalid-api-key"
+  | "auth/internal-error"
+  | "auth/invalid-user-token"
+  | "auth/user-token-expired"
   | "firebase/missing-config"
   | "unknown";
 
@@ -53,7 +57,7 @@ const setAuthCookie = async (user: FirebaseUser): Promise<void> => {
   document.cookie = `${authCookieName}=${token}; path=/; max-age=604800; SameSite=Lax`;
 };
 
-const clearAuthCookie = (): void => {
+export const clearAuthCookie = (): void => {
   document.cookie = `${authCookieName}=; path=/; max-age=0; SameSite=Lax`;
 };
 
@@ -65,6 +69,10 @@ export const authErrorMessages: Record<AuthErrorCode, string> = {
   "auth/email-already-in-use": "Este email já está em uso",
   "auth/weak-password": "A senha deve ter pelo menos 6 caracteres",
   "auth/invalid-email": "Email inválido",
+  "auth/invalid-api-key": "Configuração do Firebase inválida",
+  "auth/internal-error": "Sessão inválida. Entre novamente",
+  "auth/invalid-user-token": "Sessão expirada. Entre novamente",
+  "auth/user-token-expired": "Sessão expirada. Entre novamente",
   "firebase/missing-config": "Configuração do Firebase ausente no .env.local",
   unknown: "Não foi possível autenticar. Tente novamente",
 };
@@ -92,6 +100,36 @@ export const getAuthErrorCode = (error: unknown): AuthErrorCode => {
 
 export const getAuthErrorMessage = (error: unknown): string => {
   return authErrorMessages[getAuthErrorCode(error)];
+};
+
+export const isRecoverableSessionError = (error: unknown): boolean => {
+  const code = getAuthErrorCode(error);
+
+  if (
+    code === "auth/invalid-user-token" ||
+    code === "auth/user-token-expired"
+  ) {
+    return true;
+  }
+
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+
+  return (
+    code === "auth/internal-error" &&
+    (message.includes("invalid_refresh_token") ||
+      message.includes("token_expired") ||
+      message.includes("user_not_found"))
+  );
+};
+
+export const clearStaleAuthSession = async (): Promise<void> => {
+  clearAuthCookie();
+
+  if (!isFirebaseClientConfigured()) {
+    return;
+  }
+
+  await signOut(firebaseAuth).catch(() => undefined);
 };
 
 export const loginWithEmail = async (
@@ -152,12 +190,7 @@ export const sendResetPasswordEmail = async (email: string): Promise<void> => {
 };
 
 export const logout = async (): Promise<void> => {
-  clearAuthCookie();
-  if (!isFirebaseClientConfigured()) {
-    return;
-  }
-
-  await signOut(firebaseAuth);
+  await clearStaleAuthSession();
 };
 
 export const listenAuthState = (
@@ -170,11 +203,27 @@ export const listenAuthState = (
 
   return onAuthStateChanged(firebaseAuth, (user) => {
     if (user === null) {
+      clearAuthCookie();
       callback(null);
       return;
     }
 
-    void setAuthCookie(user);
-    callback(user);
+    void setAuthCookie(user)
+      .then(() => callback(user))
+      .catch(async (error: unknown) => {
+        if (isRecoverableSessionError(error)) {
+          await clearStaleAuthSession();
+          callback(null);
+          return;
+        }
+
+        callback(user);
+      });
+  }, async (error) => {
+    if (isRecoverableSessionError(error)) {
+      await clearStaleAuthSession();
+    }
+
+    callback(null);
   });
 };

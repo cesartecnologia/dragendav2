@@ -1,4 +1,8 @@
 import type { User as FirebaseUser } from "firebase/auth";
+import {
+  clearStaleAuthSession,
+  isRecoverableSessionError,
+} from "../firebase/auth";
 import type { Clinic, User } from "../types";
 
 export type AuthMeResponse = {
@@ -41,7 +45,18 @@ const requestWithFirebaseToken = async <TResponse>(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<TResponse> => {
-  const token = await firebaseUser.getIdToken();
+  let token: string;
+
+  try {
+    token = await firebaseUser.getIdToken();
+  } catch (error: unknown) {
+    if (isRecoverableSessionError(error)) {
+      await clearStaleAuthSession();
+    }
+
+    throw error;
+  }
+
   const response = await fetch(input, {
     ...init,
     headers: {
