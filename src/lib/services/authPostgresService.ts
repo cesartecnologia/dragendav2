@@ -83,6 +83,8 @@ const buildTrialEndDate = (): Date => {
 
 const dateOnly = (date: Date): string => date.toISOString().slice(0, 10);
 
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
 const ensureMasterSubscription = async (clinicId: string): Promise<void> => {
   await getDb()
     .insert(subscriptions)
@@ -151,88 +153,157 @@ export const bootstrapClinicOwner = async (
   const db = getDb();
   const existingClinic = (
     await db
-      .select({ id: clinics.id })
+      .select({ id: clinics.id, email: clinics.email })
       .from(clinics)
       .where(eq(clinics.cnpj, input.cnpj))
       .limit(1)
   )[0];
 
+  let createdUser: typeof users.$inferSelect;
+
   if (existingClinic !== undefined) {
-    throw new Error("CNPJ já cadastrado. Entre pelo login ou use outro CNPJ para criar uma nova clínica.");
+    if (normalizeEmail(existingClinic.email) !== normalizeEmail(input.ownerEmail)) {
+      throw new Error("CNPJ já cadastrado. Entre pelo login ou use outro CNPJ para criar uma nova clínica.");
+    }
+
+    createdUser = await db.transaction(async (tx) => {
+      const trialEndsAt = buildTrialEndDate();
+      const trialDate = dateOnly(trialEndsAt);
+      const trialProviderId = buildTrialProviderId(existingClinic.id);
+
+      await tx
+        .insert(subscriptions)
+        .values({
+          clinicId: existingClinic.id,
+          provider: "asaas",
+          providerCustomerId: trialProviderId,
+          providerSubscriptionId: trialProviderId,
+          status: "trialing",
+          plan: "starter",
+          amount: 9990,
+          nextDueDate: trialDate,
+          currentPeriodEnd: trialDate,
+          trialEndsAt,
+        })
+        .onConflictDoNothing({
+          target: subscriptions.clinicId,
+        });
+
+      const userRows = await tx
+        .insert(users)
+        .values({
+          firebaseUid: input.firebaseUid,
+          clinicId: existingClinic.id,
+          role: "OWNER",
+          name: input.ownerName,
+          email: input.ownerEmail,
+          active: true,
+        })
+        .onConflictDoUpdate({
+          target: users.firebaseUid,
+          set: {
+            clinicId: existingClinic.id,
+            role: "OWNER",
+            name: input.ownerName,
+            email: input.ownerEmail,
+            active: true,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+
+      if (userRows[0] !== undefined) {
+        return userRows[0];
+      }
+
+      const existingRows = await tx
+        .select()
+        .from(users)
+        .where(eq(users.firebaseUid, input.firebaseUid))
+        .limit(1);
+
+      const existingRow = existingRows[0];
+
+      if (existingRow === undefined) {
+        throw new Error("Não foi possível criar usuário");
+      }
+
+      return existingRow;
+    });
+  } else {
+    createdUser = await db.transaction(async (tx) => {
+      await tx
+        .insert(clinics)
+        .values({
+          id: input.clinicId,
+          name: input.clinicName,
+          cnpj: input.cnpj,
+          phone: input.phone,
+          email: input.ownerEmail,
+          address: emptyAddress(input.city, input.state),
+          plan: "starter",
+          active: true,
+        })
+        .onConflictDoNothing({
+          target: clinics.id,
+        });
+
+      const trialEndsAt = buildTrialEndDate();
+      const trialDate = dateOnly(trialEndsAt);
+      const trialProviderId = buildTrialProviderId(input.clinicId);
+
+      await tx
+        .insert(subscriptions)
+        .values({
+          clinicId: input.clinicId,
+          provider: "asaas",
+          providerCustomerId: trialProviderId,
+          providerSubscriptionId: trialProviderId,
+          status: "trialing",
+          plan: "starter",
+          amount: 9990,
+          nextDueDate: trialDate,
+          currentPeriodEnd: trialDate,
+          trialEndsAt,
+        })
+        .onConflictDoNothing({
+          target: subscriptions.clinicId,
+        });
+
+      const userRows = await tx
+        .insert(users)
+        .values({
+          firebaseUid: input.firebaseUid,
+          clinicId: input.clinicId,
+          role: "OWNER",
+          name: input.ownerName,
+          email: input.ownerEmail,
+          active: true,
+        })
+        .onConflictDoNothing({
+          target: users.firebaseUid,
+        })
+        .returning();
+
+      if (userRows[0] !== undefined) {
+        return userRows[0];
+      }
+
+      const existingRows = await tx
+        .select()
+        .from(users)
+        .where(eq(users.firebaseUid, input.firebaseUid))
+        .limit(1);
+
+      const existingRow = existingRows[0];
+
+      if (existingRow === undefined) {
+        throw new Error("Não foi possível criar usuário");
+      }
+
+      return existingRow;
+    });
   }
-
-  const createdUser = await db.transaction(async (tx) => {
-    await tx
-      .insert(clinics)
-      .values({
-        id: input.clinicId,
-        name: input.clinicName,
-        cnpj: input.cnpj,
-        phone: input.phone,
-        email: input.ownerEmail,
-        address: emptyAddress(input.city, input.state),
-        plan: "starter",
-        active: true,
-      })
-      .onConflictDoNothing({
-        target: clinics.id,
-      });
-
-    const trialEndsAt = buildTrialEndDate();
-    const trialDate = dateOnly(trialEndsAt);
-    const trialProviderId = buildTrialProviderId(input.clinicId);
-
-    await tx
-      .insert(subscriptions)
-      .values({
-        clinicId: input.clinicId,
-        provider: "asaas",
-        providerCustomerId: trialProviderId,
-        providerSubscriptionId: trialProviderId,
-        status: "trialing",
-        plan: "starter",
-        amount: 9990,
-        nextDueDate: trialDate,
-        currentPeriodEnd: trialDate,
-        trialEndsAt,
-      })
-      .onConflictDoNothing({
-        target: subscriptions.clinicId,
-      });
-
-    const userRows = await tx
-      .insert(users)
-      .values({
-        firebaseUid: input.firebaseUid,
-        clinicId: input.clinicId,
-        role: "OWNER",
-        name: input.ownerName,
-        email: input.ownerEmail,
-        active: true,
-      })
-      .onConflictDoNothing({
-        target: users.firebaseUid,
-      })
-      .returning();
-
-    if (userRows[0] !== undefined) {
-      return userRows[0];
-    }
-
-    const existingRows = await tx
-      .select()
-      .from(users)
-      .where(eq(users.firebaseUid, input.firebaseUid))
-      .limit(1);
-
-    const existingRow = existingRows[0];
-
-    if (existingRow === undefined) {
-      throw new Error("Não foi possível criar usuário");
-    }
-
-    return existingRow;
-  });
 
   if (input.checkoutSessionId !== undefined) {
     const checkoutSession = await getCheckoutSessionById(input.checkoutSessionId);
@@ -249,7 +320,7 @@ export const bootstrapClinicOwner = async (
     await getDb()
       .insert(subscriptions)
       .values({
-        clinicId: input.clinicId,
+        clinicId: createdUser.clinicId,
         provider: "asaas",
         providerCustomerId: checkoutSession.asaasCustomerId ?? "",
         providerSubscriptionId:
@@ -278,7 +349,7 @@ export const bootstrapClinicOwner = async (
 
     await completeOnboardingForSession(input.checkoutSessionId, {
       userId: createdUser.id,
-      clinicId: input.clinicId,
+      clinicId: createdUser.clinicId,
     });
   }
 
