@@ -149,6 +149,18 @@ export const bootstrapClinicOwner = async (
   }
 
   const db = getDb();
+  const existingClinic = (
+    await db
+      .select({ id: clinics.id })
+      .from(clinics)
+      .where(eq(clinics.cnpj, input.cnpj))
+      .limit(1)
+  )[0];
+
+  if (existingClinic !== undefined) {
+    throw new Error("CNPJ já cadastrado. Entre pelo login ou use outro CNPJ para criar uma nova clínica.");
+  }
+
   const createdUser = await db.transaction(async (tx) => {
     await tx
       .insert(clinics)

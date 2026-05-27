@@ -17,6 +17,37 @@ const schema = z.object({
   checkoutSessionId: z.string().uuid("Pagamento inválido").optional(),
 });
 
+const clientErrorMessages = new Set([
+  "CNPJ já cadastrado. Entre pelo login ou use outro CNPJ para criar uma nova clínica.",
+  "Sessão de pagamento não encontrada",
+  "Pagamento ainda não confirmado",
+]);
+
+const getErrorResponse = (error: unknown): { message: string; status: number } => {
+  const message = error instanceof Error ? error.message : "Não foi possível preparar a clínica";
+
+  if (clientErrorMessages.has(message)) {
+    return { message, status: 400 };
+  }
+
+  if (message === "Sessão inválida" || message === "Sessão expirada") {
+    return { message, status: 401 };
+  }
+
+  if (message === "DATABASE_URL não configurada") {
+    return {
+      message: "Banco de dados não configurado no servidor",
+      status: 500,
+    };
+  }
+
+  console.error("auth/bootstrap failed", error);
+  return {
+    message: "Não foi possível preparar a clínica. Tente novamente em instantes.",
+    status: 500,
+  };
+};
+
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
   try {
     const token = getBearerToken(request);
@@ -49,10 +80,11 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     });
 
     return NextResponse.json({ user });
-  } catch {
+  } catch (error: unknown) {
+    const { message, status } = getErrorResponse(error);
     return NextResponse.json(
-      { message: "Não foi possível preparar a clínica" },
-      { status: 500 },
+      { message },
+      { status },
     );
   }
 };
